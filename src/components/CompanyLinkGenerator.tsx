@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Plus } from "lucide-react";
+import { surveyService } from "@/services/surveyService";
 
 const CompanyLinkGenerator = () => {
   const [companyName, setCompanyName] = useState("");
@@ -19,7 +20,8 @@ const CompanyLinkGenerator = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 
-  const generateLink = () => {
+  const generateLink = async () => {
+    
     if (!companyName.trim()) {
       toast({
         title: "Error",
@@ -29,15 +31,23 @@ const CompanyLinkGenerator = () => {
       return;
     }
 
-    // Crear un slug de la empresa para la URL
-    const companySlug = companyName
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
-    
-    const link = `${window.location.origin}/cuestionario?empresa=${encodeURIComponent(companySlug)}&nombre=${encodeURIComponent(companyName)}`;
-    setGeneratedLink(link);
-    
+    // Crear un slug de la empresa para la URL  
+
+    const url = await surveyService.createNewSurveyUrl(companyName);
+
+    if (!url) {
+
+      toast({
+        title: "Error",
+        description: "No se pudo generar el enlace. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setGeneratedLink(url);
+  
+  
     toast({
       title: "¡Enlace generado!",
       description: `Enlace creado para ${companyName}`,

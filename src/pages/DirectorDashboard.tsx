@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import CompanyLinkGenerator from "@/components/CompanyLinkGenerator";
 
+
 const DirectorDashboard = () => {
   const navigate = useNavigate();
 
