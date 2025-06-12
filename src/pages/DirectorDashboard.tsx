@@ -2,15 +2,17 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import Navigation from "@/components/Navigation";
+import NavigationD from "@/components/NavigationD";
 import CompanyLinkGenerator from "@/components/CompanyLinkGenerator";
+import { surveyService } from "@/services/surveyService";
 
 
 const DirectorDashboard = () => {
   const navigate = useNavigate();
 
   const copyToClipboard = async () => {
-    const surveyUrl = `${window.location.origin}/cuestionario`;
+    
+    const surveyUrl =  await surveyService.createNewSurveyUrl("");
     try {
       await navigator.clipboard.writeText(surveyUrl);
       alert('¡Enlace copiado al portapapeles!');
@@ -22,7 +24,7 @@ const DirectorDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <Navigation />
+      <NavigationD />
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
@@ -87,7 +89,7 @@ const DirectorDashboard = () => {
                   Revisa las respuestas recopiladas filtradas por empresa y analiza los patrones identificados.
                 </p>
                 <Button 
-                  onClick={() => navigate('/responses')}
+                  onClick={() => navigate('/directores-responses')}
                   className="w-full bg-green-600 hover:bg-green-700"
                 >
                   Ver Respuestas por Empresa

@@ -37,6 +37,7 @@ const Responses = () => {
       <Navigation />
       
       <div className="container mx-auto px-4 py-8">
+        
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
             Respuestas del Cuestionario
