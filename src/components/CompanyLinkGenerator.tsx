@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +20,6 @@ const CompanyLinkGenerator = () => {
   const { toast } = useToast();
 
   const generateLink = async () => {
-    
     if (!companyName.trim()) {
       toast({
         title: "Error",
@@ -31,12 +29,11 @@ const CompanyLinkGenerator = () => {
       return;
     }
 
-    // Crear un slug de la empresa para la URL  
+    // Crear un slug de la empresa para la URL
 
     const url = await surveyService.createNewSurveyUrl(companyName);
 
     if (!url) {
-
       toast({
         title: "Error",
         description: "No se pudo generar el enlace. Inténtalo de nuevo.",
@@ -46,8 +43,7 @@ const CompanyLinkGenerator = () => {
     }
 
     setGeneratedLink(url);
-  
-  
+
     toast({
       title: "¡Enlace generado!",
       description: `Enlace creado para ${companyName}`,
@@ -62,7 +58,7 @@ const CompanyLinkGenerator = () => {
         description: "El enlace ha sido copiado al portapapeles",
       });
     } catch (err) {
-      console.error('Error al copiar:', err);
+      console.error("Error al copiar:", err);
       toast({
         title: "Error",
         description: "No se pudo copiar el enlace",
@@ -77,10 +73,13 @@ const CompanyLinkGenerator = () => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      setIsOpen(open);
-      if (!open) resetForm();
-    }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) resetForm();
+      }}
+    >
       <DialogTrigger asChild>
         <Button className="bg-emerald-600 hover:bg-emerald-700">
           <Plus className="w-4 h-4 mr-2" />
@@ -101,15 +100,15 @@ const CompanyLinkGenerator = () => {
               placeholder="Ej: Acme Corporation"
             />
           </div>
-          
-          <Button 
-            onClick={generateLink} 
+
+          <Button
+            onClick={generateLink}
             className="w-full"
             disabled={!companyName.trim()}
           >
             Generar Enlace
           </Button>
-          
+
           {generatedLink && (
             <div className="space-y-3">
               <Label>Enlace Generado:</Label>
@@ -118,6 +117,7 @@ const CompanyLinkGenerator = () => {
                   {generatedLink}
                 </p>
               </div>
+              {/* 
               <Button 
                 onClick={copyToClipboard}
                 variant="outline"
@@ -126,6 +126,7 @@ const CompanyLinkGenerator = () => {
                 <Copy className="w-4 h-4 mr-2" />
                 Copiar Enlace
               </Button>
+              */}
             </div>
           )}
         </div>

@@ -2,14 +2,14 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 
-const Navigation = () => {
+const NavigationD = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const navItems = [,
     {path: "/directores", label: "Inicio Directores" },
     { path: "/directores-responses", label: "Respuestas" },
-    { path: "/dashboard", label: "Dashboard" },
+    { path: "/directores-dashboard", label: "Dashboard" },
     { path: "/analysis", label: "Análisis" },
     { path: "/recommendations", label: "Recomendaciones" }
   ];
@@ -50,4 +50,4 @@ const Navigation = () => {
   );
 };
 
-export default Navigation;
+export default NavigationD;

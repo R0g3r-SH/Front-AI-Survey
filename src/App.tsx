@@ -14,6 +14,8 @@ import Analysis from "./pages/Analysis";
 import Recommendations from "./pages/Recommendations";
 import NotFound from "./pages/NotFound";
 import ResponsesD from "./pages/ResponsesD";
+import DashboardD from "./pages/DashboardD";
+
 
 const queryClient = new QueryClient();
 
@@ -28,6 +30,7 @@ const App = () => (
           <Route path="/directores" element={<DirectorDashboard />} />
           <Route path="/cuestionario/:companyId/:tkn" element={<StandaloneSurvey />} />
           <Route path="/directores-responses" element={<ResponsesD/>} />
+          <Route path="/directores-dashboard" element={<DashboardD />} />
           <Route path="/survey" element={<Survey />} />
           <Route path="/responses" element={<Responses />} />
           <Route path="/dashboard" element={<Dashboard />} />
