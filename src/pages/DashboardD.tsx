@@ -26,10 +26,14 @@ import {
   PolarRadiusAxis,
   Radar,
   Legend,
+  ReferenceLine,
+  Label,
 } from "recharts";
 import NavigationD from "@/components/NavigationD";
 import { companyService } from "@/services/companyService"; // Asegúrate de que este servicio esté configurado correctamente
-import { dashboardService } from "@/services/dashboardService";
+import { dashboardService} from "@/services/dashboardService";
+import { set } from "date-fns";
+import { userInfo } from "os";
 
 const DashboardD = () => {
   const [selectedCompany, setSelectedCompany] = useState("todas");
@@ -37,6 +41,7 @@ const DashboardD = () => {
   const [comparisonType, setComparisonType] = useState("oportunidades");
   const [compareCompany1, setCompareCompany1] = useState("promedio");
   const [compareCompany2, setCompareCompany2] = useState("");
+  const [radarData, setRadarData] = useState<any>({});
 
   interface DashboardData {
     section1?: {
@@ -49,21 +54,26 @@ const DashboardD = () => {
     participationByDepartment?: {
       graphData: any[];
     };
+    taskTypeData?: {
+      graphData: any[];
+    };
+    levelOfPreparation?: {
+      graphData: any[];
+    };
+    matrixImpactEffort?: {
+      graphData: any[];
+    };
   }
 
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
-    {
-
-      participationByDepartment: {
-        graphData:[]
-      }
-    }
-  );
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>({
+    participationByDepartment: {
+      graphData: [],
+    },
+  });
   // Cargar empresas disponibles
   useEffect(() => {
     const fetchData = async () => {
       const companiesData = await companyService.getAllCompanies();
-
       if (companiesData) {
         console.log(companiesData);
         setCompanies(companiesData);
@@ -89,12 +99,50 @@ const DashboardD = () => {
   ];
 
   const impactEffortData = [
-    { name: "Email automation", impact: 85, effort: 25, size: 40 },
-    { name: "Report generation", impact: 90, effort: 45, size: 60 },
-    { name: "Data analysis", impact: 95, effort: 70, size: 80 },
-    { name: "Content creation", impact: 70, effort: 35, size: 50 },
-    { name: "Customer support", impact: 80, effort: 55, size: 65 },
-  ];
+    {
+      name: "Email automation",
+      impact: 85,
+      effort: 25,
+      size: 40,
+      color: "#4CAF50",
+    },
+    {
+      name: "Report generation",
+      impact: 90,
+      effort: 45,
+      size: 60,
+      color: "#4CAF50",
+    },
+    {
+      name: "Data analysis",
+      impact: 95,
+      effort: 70,
+      size: 80,
+      color: "#2196F3",
+    },
+    {
+      name: "Content creation",
+      impact: 70,
+      effort: 35,
+      size: 50,
+      color: "#4CAF50",
+    },
+    {
+      name: "Customer support",
+      impact: 80,
+      effort: 55,
+      size: 65,
+      color: "#FF5722",
+    },
+  ].map((item) => ({
+    ...item,
+    color:
+      item.impact >= 50 && item.effort <= 50
+        ? "#4CAF50"
+        : item.impact <= 50 && item.effort >= 50
+        ? "#FF5722"
+        : "#2196F3",
+  }));
 
   // Datos para la gráfica radial comparativa
   const getRadarData = () => {
@@ -108,11 +156,7 @@ const DashboardD = () => {
     ];
 
     if (comparisonType === "oportunidades") {
-      return areas.map((area) => ({
-        area,
-        empresa1: Math.floor(Math.random() * 25) + 10, // Simulamos datos
-        empresa2: Math.floor(Math.random() * 25) + 10,
-      }));
+      return radarData.areas
     } else if (comparisonType === "tipos") {
       const tipos = [
         "Documentación",
@@ -122,22 +166,14 @@ const DashboardD = () => {
         "Reportes",
         "Gestión",
       ];
-      return tipos.map((tipo) => ({
-        area: tipo,
-        empresa1: Math.floor(Math.random() * 40) + 10,
-        empresa2: Math.floor(Math.random() * 40) + 10,
-      }));
+      return radarData.tipeOportunity
     } else {
       // automatización
-      return areas.map((area) => ({
-        area,
-        empresa1: Math.floor(Math.random() * 30) + 60, // Porcentajes entre 60-90
-        empresa2: Math.floor(Math.random() * 30) + 60,
-      }));
+      return radarData.potentialAutomation || [];
     }
   };
 
-  const radarData = getRadarData();
+
 
   const getComparisonLabels = () => {
     const label1 =
@@ -167,15 +203,106 @@ const DashboardD = () => {
     }
   };
 
+
+  const getRadarDataAPI = async (companyId: string, companyId2: string) => {
+    try {
+      const response = await dashboardService.getComparativeData(
+        companyId,
+        companyId2
+      );
+      if (response) {
+        setRadarData(response);
+        console.log("Radar data fetched:", response);
+      }
+    } catch (error) {
+      console.error("Error fetching radar data:", error);
+      setRadarData([]);
+    }
+  };  
+
   const handleCompanyChange = async (companyId: string) => {
     setSelectedCompany(companyId);
+    setCompareCompany1(companyId);
+    setCompareCompany2("");
     if (companyId !== "todas") {
       await fetchDashboardData(companyId);
+      await getRadarDataAPI(companyId, ""); // Fetch radar data for the selected company
+    
     } else {
-      setDashboardData(null); // clear data if "todas" is selected
+      setDashboardData({
+        section1: {
+          totalAnswers: 0,
+          numberUseCases: 0,
+          automationPotential: { mean: 0 },
+        },
+        participationByDepartment: { graphData: [] },
+        taskTypeData: { graphData: [] },
+      }); // clear data if "todas" is selected
     }
   };
 
+  const CustomLabel = ({ name, x, y }) => (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={-10} // Ajusta la posición vertical
+        textAnchor="middle"
+        fill="#333"
+        fontSize={12}
+        fontWeight="bold"
+      >
+        {name}
+      </text>
+    </g>
+  );
+
+  interface CustomTooltipProps {
+    active?: boolean; // Make active optional
+    payload?: any[]; // Make payload optional
+    label?: string; // Make label optional
+  }
+
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload; // Accede a los datos del punto
+      return (
+        <div
+          className="custom-tooltip"
+          style={{
+            background: "white",
+            padding: "10px",
+            border: "1px solid #ddd",
+            borderRadius: "4px",
+            boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+          }}
+        >
+          <p style={{ fontWeight: "bold", marginBottom: "5px" }}>
+            🔹 {data.name}
+          </p>
+          <p>
+            Impacto: <strong>{data.impact}%</strong>
+          </p>
+          <p>
+            Esfuerzo: <strong>{data.effort}%</strong>
+          </p>
+          <p>
+            Frecuencia: <strong>{data.frequency}</strong>
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+
+  useEffect(() => {
+    if (selectedCompany !== "todas") {
+      getRadarDataAPI(compareCompany1, compareCompany2);
+    } else {
+
+      setRadarData([]);
+    }
+  }, [compareCompany1, compareCompany2]);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <NavigationD />
@@ -208,7 +335,7 @@ const DashboardD = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="todas">
-                        📊 Todas las empresas
+                        📊 Selecione una empresa
                       </SelectItem>
                       {companies.map((company) => (
                         <SelectItem key={company._id} value={company._id}>
@@ -321,7 +448,7 @@ const DashboardD = () => {
         )}
 
         {/* Nueva gráfica radial comparativa */}
-        {/* {selectedCompany !== "todas" && (
+       {selectedCompany !== "todas" && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>Análisis Comparativo por Empresa</CardTitle>
@@ -363,12 +490,9 @@ const DashboardD = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="promedio">
-                        📊 Promedio General
-                      </SelectItem>
                       {companies.map((company) => (
-                        <SelectItem key={company} value={company}>
-                          🏢 {company}
+                        <SelectItem key={company._id} value={company._id}>
+                          🏢 {company.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -387,9 +511,9 @@ const DashboardD = () => {
                       <SelectValue placeholder="Seleccionar empresa" />
                     </SelectTrigger>
                     <SelectContent>
-                      {companies.map((company) => (
-                        <SelectItem key={company} value={company}>
-                          🏢 {company}
+                    {companies.map((company) => (
+                        <SelectItem key={company._id} value={company._id}>
+                          🏢 {company.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -399,7 +523,10 @@ const DashboardD = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
-                <RadarChart data={radarData}>
+                <RadarChart
+                  data={getRadarData()}
+                  key={`${dashboardData}`}
+                >
                   <PolarGrid />
                   <PolarAngleAxis dataKey="area" />
                   <PolarRadiusAxis
@@ -407,7 +534,7 @@ const DashboardD = () => {
                     domain={[0, comparisonType === "automatizacion" ? 100 : 50]}
                   />
                   <Radar
-                    name={label1}
+                    name={getCompanyNameById(label1)}
                     dataKey="empresa1"
                     stroke="#8884d8"
                     fill="#8884d8"
@@ -416,7 +543,7 @@ const DashboardD = () => {
                   />
                   {compareCompany2 && (
                     <Radar
-                      name={label2}
+                      name={getCompanyNameById(label2)}
                       dataKey="empresa2"
                       stroke="#82ca9d"
                       fill="#82ca9d"
@@ -438,16 +565,98 @@ const DashboardD = () => {
               )}
             </CardContent>
           </Card>
-        )} */}
+        )} 
 
         {/* Gráficos principales */}
 
-        {selectedCompany !== "todas" &&  dashboardData.participationByDepartment.graphData &&(
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {selectedCompany !== "todas" &&
+          dashboardData.participationByDepartment.graphData && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    Participación por Departamento
+                    {selectedCompany !== "todas" && (
+                      <span className="text-sm font-normal text-gray-500">
+                        {" "}
+                        - {getCompanyNameById(selectedCompany)}
+                      </span>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                      data={
+                        dashboardData.participationByDepartment?.graphData || []
+                      }
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar
+                        dataKey="responses"
+                        fill="#8884d8"
+                        name="Respuestas"
+                      />
+                      <Bar
+                        dataKey="automation"
+                        fill="#82ca9d"
+                        name="% Automatización"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    Distribución de Tipos de Tareas
+                    {selectedCompany !== "todas" && (
+                      <span className="text-sm font-normal text-gray-500">
+                        {" "}
+                        - {getCompanyNameById(selectedCompany)}
+                      </span>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={
+                          dashboardData.taskTypeData?.graphData || taskTypeData
+                        }
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) =>
+                          `${name} ${(percent * 100).toFixed(0)}%`
+                        }
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {taskTypeData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+        {selectedCompany !== "todas" && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card>
               <CardHeader>
                 <CardTitle>
-                  Participación por Departamento
+                  Nivel de Preparación en IA
                   {selectedCompany !== "todas" && (
                     <span className="text-sm font-normal text-gray-500">
                       {" "}
@@ -457,84 +666,18 @@ const DashboardD = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={dashboardData.participationByDepartment?.graphData || []}>
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart
+                    data={
+                      dashboardData.levelOfPreparation?.graphData ||
+                      aiReadinessData
+                    }
+                  >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
+                    <XAxis dataKey="level" type="category" />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#8884d8" />
                     <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="responses" fill="#8884d8" name="Respuestas" />
-                    <Bar
-                      dataKey="automation"
-                      fill="#82ca9d"
-                      name="% Automatización"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  Distribución de Tipos de Tareas
-                  {selectedCompany !== "todas" && (
-                    <span className="text-sm font-normal text-gray-500">
-                      {" "}
-                      - {selectedCompany}
-                    </span>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={taskTypeData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) =>
-                        `${name} ${(percent * 100).toFixed(0)}%`
-                      }
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {taskTypeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-          
-        {/* {selectedCompany !== "todas" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  Nivel de Preparación en IA
-                  {selectedCompany !== "todas" && (
-                    <span className="text-sm font-normal text-gray-500">
-                      {" "}
-                      - {selectedCompany}
-                    </span>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={aiReadinessData} layout="horizontal">
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="level" type="category" width={80} />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#ffc658" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -547,46 +690,52 @@ const DashboardD = () => {
                   {selectedCompany !== "todas" && (
                     <span className="text-sm font-normal text-gray-500">
                       {" "}
-                      - {selectedCompany}
+                      - {getCompanyNameById(selectedCompany)}
                     </span>
                   )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <ScatterChart data={impactEffortData}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                <ResponsiveContainer width="100%" height={400}>
+                  <ScatterChart
+                    data={dashboardData.matrixImpactEffort?.graphData || []}
+                  >
+                    {/* Ejes y grid (igual que antes) */}
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis
-                      type="number"
                       dataKey="effort"
                       domain={[0, 100]}
                       label={{
-                        value: "Esfuerzo",
-                        position: "insideBottom",
-                        offset: -5,
+                        value: "Esfuerzo →",
+                        position: "insideBottomRight",
+                        offset: -5, // Adjust label position
                       }}
+                      padding={{}} // Remove unsupported 'top' property
                     />
                     <YAxis
-                      type="number"
                       dataKey="impact"
                       domain={[0, 100]}
                       label={{
-                        value: "Impacto",
+                        value: "↑ Impacto",
                         angle: -90,
                         position: "insideLeft",
                       }}
                     />
+
+                    {/* ScatterPlot con colores por prioridad */}
+                    <Scatter name="Tareas" dataKey="size" fill="#8884d8" />
+
+                    {/* Tooltip que muestra el nombre, impacto y esfuerzo */}
                     <Tooltip
-                      formatter={(value, name) => [value, name]}
-                      labelFormatter={(label) => `Caso: ${label}`}
+                      content={(props) => <CustomTooltip {...props} />} // Pass props safely
+                      cursor={{ strokeDasharray: "3 3" }}
                     />
-                    <Scatter dataKey="size" fill="#8884d8" />
                   </ScatterChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
-        )} */}
+        )}
       </div>
     </div>
   );
