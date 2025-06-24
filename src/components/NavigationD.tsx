@@ -10,8 +10,8 @@ const NavigationD = () => {
     {path: "/directores", label: "Inicio Directores" },
     { path: "/directores-responses", label: "Respuestas" },
     { path: "/directores-dashboard", label: "Dashboard" },
-    { path: "/analysis", label: "Análisis" },
-    { path: "/recommendations", label: "Recomendaciones" }
+    { path: "/directores-analysis", label: "Análisis" },
+    { path: "/directores-recommendations", label: "Recomendaciones" }
   ];
 
   return (

@@ -11,7 +11,9 @@ import DirectorDashboard from "./pages/DirectorDashboard";
 import Responses from "./pages/Responses";
 import Dashboard from "./pages/Dashboard";
 import Analysis from "./pages/Analysis";
+import AnalysisD from "./pages/AnalysisD";
 import Recommendations from "./pages/Recommendations";
+import RecommendationsD from "./pages/RecommendationsD";
 import NotFound from "./pages/NotFound";
 import ResponsesD from "./pages/ResponsesD";
 import DashboardD from "./pages/DashboardD";
@@ -31,6 +33,8 @@ const App = () => (
           <Route path="/cuestionario/:companyId/:tkn" element={<StandaloneSurvey />} />
           <Route path="/directores-responses" element={<ResponsesD/>} />
           <Route path="/directores-dashboard" element={<DashboardD />} />
+          <Route path="/directores-analysis" element={<AnalysisD />} />
+          <Route path="/directores-recommendations" element={<RecommendationsD />} />
           <Route path="/survey" element={<Survey />} />
           <Route path="/responses" element={<Responses />} />
           <Route path="/dashboard" element={<Dashboard />} />
