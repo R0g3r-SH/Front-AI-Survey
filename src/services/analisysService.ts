@@ -9,4 +9,16 @@ export const analysisService = {
 
         return response.data;
     },
+
+    generateAIReport: async (companyId: string) => {
+        if (!companyId) {
+            throw new Error("Company ID is required to generate AI report");
+        }
+        const response = await api.get(`/analysis/report/${companyId}`);
+
+        if (response.status !== 200) {
+            throw new Error("Failed to generate AI report");
+        }
+        return response.data;
+    }
 }
