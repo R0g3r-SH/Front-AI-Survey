@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import Spinner from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -29,7 +30,6 @@ import { report } from "process";
 const AnalysisD = () => {
   const [selectedCluster, setSelectedCluster] = useState("all");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
-
   const [clusters, setClusters] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState("todas");
@@ -43,6 +43,7 @@ const AnalysisD = () => {
       expected_impact: "",
     },
   });
+  const [loadingRecommendations, setLodingRecommendations] = useState(false);
 
   // Datos de clusters identificados
   // const clusters = [
@@ -268,14 +269,16 @@ const AnalysisD = () => {
     fetchClusters();
   }, []);
 
-
   const generateAIReport = async () => {
     if (selectedCompany === "todas") {
       console.error("No company selected for AI report generation");
       return;
     }
     try {
-      const reportData = await analysisService.generateAIReport(selectedCompany);
+      setLodingRecommendations(true);
+      const reportData = await analysisService.generateAIReport(
+        selectedCompany
+      );
       setAnalysisData((prevData) => ({
         ...prevData,
         report: {
@@ -283,9 +286,11 @@ const AnalysisD = () => {
           expected_impact: reportData.expected_impact,
         },
       }));
+      setLodingRecommendations(false);
       console.log("AI report generated successfully:", reportData);
     } catch (error) {
-      console.error("Error generating AI report:", error);  
+      setLodingRecommendations(false);
+      console.error("Error generating AI report:", error);
     }
   };
 
@@ -301,6 +306,16 @@ const AnalysisD = () => {
         .catch((error) => {
           console.error("Error fetching clusters for company:", error);
           setClusters([]);
+          setAnalysisData({
+            clusters: [],
+            departments: [],
+            useCases: [],
+            technologyStack: [],
+            report: {
+              main_recommendation: "",
+              expected_impact: "",
+            },
+          });
         });
     } else {
       setClusters([]);
@@ -599,17 +614,27 @@ const AnalysisD = () => {
               <Card>
                 <div className="flex items-center justify-between p-4">
                   <CardTitle>Resumen Ejecutivo</CardTitle>
-                  {analysisData?.report?.main_recommendation && (
-                    <Button 
-                    
-                      onClick={generateAIReport}
-                    variant="outline" size="sm" className="ml-4">
-                       🔁 Regenerar
-                    </Button> 
-                  )}
+                  {analysisData?.report?.main_recommendation &&
+                    !loadingRecommendations && (
+                      <Button
+                        onClick={generateAIReport}
+                        variant="outline"
+                        size="sm"
+                        className="ml-4"
+                      >
+                        🔁 Regenerar
+                      </Button>
+                    )}
                 </div>
                 <CardContent className="space-y-4">
-                  {analysisData?.report?.main_recommendation ? (
+                  {loadingRecommendations ? (
+                    <div
+                      className="flex items-center justify-center "
+                      style={{ height: "300px" }}
+                    >
+                      <Spinner message="Generando recomendaciones..." />
+                    </div>
+                  ) : analysisData?.report?.main_recommendation ? (
                     <>
                       <div className="p-4 bg-blue-50 rounded-lg">
                         <div className="flex justify-between items-start">
@@ -648,9 +673,9 @@ const AnalysisD = () => {
                       <p className="text-gray-500 mb-4">
                         No hay recomendaciones generadas
                       </p>
-                      <Button
-                        onClick={generateAIReport}
-                        >¿Te gustaría generar una?</Button>
+                      <Button onClick={generateAIReport}>
+                        ¿Te gustaría generar una?
+                      </Button>
                     </div>
                   )}
                 </CardContent>
@@ -658,6 +683,32 @@ const AnalysisD = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {selectedCompany == "todas" && (
+          <Card className=" mx-auto mb-8 text-center">
+            <CardContent className="pt-6">
+              <p className="text-gray-600">
+                Seleccione una empresa para ver el análisis detallado de
+                clusters, casos de uso y recomendaciones.
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                O explore las respuestas generales disponibles.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+        {clusters.length === 0 && selectedCompany !== "todas" && (
+          <Card className=" mx-auto mb-8 text-center">
+            <CardContent className="pt-6">
+              <p className="text-gray-600">
+                No se encontraron datos para la empresa seleccionada.
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                Asegúrate de que la empresa tenga datos de encuesta disponibles.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

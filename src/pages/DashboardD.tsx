@@ -199,7 +199,20 @@ const DashboardD = () => {
       }
     } catch (error) {
       console.error("Error fetching survey data:", error);
-      setDashboardData(null);
+      setDashboardData({
+        section1: {
+          totalAnswers: 0,
+          numberUseCases: 0,
+          automationPotential: { mean: 0 },     
+
+        },
+        participationByDepartment: { graphData: [] },
+        taskTypeData: { graphData: [] },
+        levelOfPreparation: { graphData: [] },    
+        matrixImpactEffort: { graphData: [] },
+      });
+      setRadarData([]);
+      
     }
   };
 

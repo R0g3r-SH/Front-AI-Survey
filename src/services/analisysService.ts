@@ -21,4 +21,17 @@ export const analysisService = {
         }
         return response.data;
     }
+    ,
+    generateAIRoadmap: async (companyId: string) => {
+        if (!companyId) {
+            throw new Error("Company ID is required to generate AI roadmap");
+        }
+        const response = await api.get(`/analysis/roadmap/${companyId}`);   
+        if (response.status !== 200) {
+            throw new Error("Failed to generate AI roadmap");
+        }
+        return response.data;
+
+    }
+
 }
