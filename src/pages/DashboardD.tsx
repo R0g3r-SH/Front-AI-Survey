@@ -31,10 +31,10 @@ import {
 } from "recharts";
 import NavigationD from "@/components/NavigationD";
 import { companyService } from "@/services/companyService"; // Asegúrate de que este servicio esté configurado correctamente
-import { dashboardService} from "@/services/dashboardService";
+import { dashboardService } from "@/services/dashboardService";
 import { set } from "date-fns";
 import { userInfo } from "os";
-
+import FullSpinner from "@/components/FullSpinner"; // Asegúrate de que este componente esté configurado correctamente
 const DashboardD = () => {
   const [selectedCompany, setSelectedCompany] = useState("todas");
   const [companies, setCompanies] = useState<any[]>([]);
@@ -42,6 +42,7 @@ const DashboardD = () => {
   const [compareCompany1, setCompareCompany1] = useState("promedio");
   const [compareCompany2, setCompareCompany2] = useState("");
   const [radarData, setRadarData] = useState<any>({});
+  const [loading, setLoading] = useState(true);
 
   interface DashboardData {
     section1?: {
@@ -73,11 +74,13 @@ const DashboardD = () => {
   // Cargar empresas disponibles
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       const companiesData = await companyService.getAllCompanies();
       if (companiesData) {
         console.log(companiesData);
         setCompanies(companiesData);
       }
+      setLoading(false);
     };
 
     fetchData();
@@ -156,7 +159,7 @@ const DashboardD = () => {
     ];
 
     if (comparisonType === "oportunidades") {
-      return radarData.areas
+      return radarData.areas;
     } else if (comparisonType === "tipos") {
       const tipos = [
         "Documentación",
@@ -166,14 +169,12 @@ const DashboardD = () => {
         "Reportes",
         "Gestión",
       ];
-      return radarData.tipeOportunity
+      return radarData.tipeOportunity;
     } else {
       // automatización
       return radarData.potentialAutomation || [];
     }
   };
-
-
 
   const getComparisonLabels = () => {
     const label1 =
@@ -192,32 +193,33 @@ const DashboardD = () => {
 
   const fetchDashboardData = async (companyId: string) => {
     try {
+      setLoading(true);
       const response = await dashboardService.getDashboardData(companyId);
       if (response) {
         setDashboardData(response);
         console.log("Dashboard data fetched:", response);
       }
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching survey data:", error);
       setDashboardData({
         section1: {
           totalAnswers: 0,
           numberUseCases: 0,
-          automationPotential: { mean: 0 },     
-
+          automationPotential: { mean: 0 },
         },
         participationByDepartment: { graphData: [] },
         taskTypeData: { graphData: [] },
-        levelOfPreparation: { graphData: [] },    
+        levelOfPreparation: { graphData: [] },
         matrixImpactEffort: { graphData: [] },
       });
       setRadarData([]);
-      
+      setLoading(false);
     }
   };
 
-
   const getRadarDataAPI = async (companyId: string, companyId2: string) => {
+    setLoading(true);
     try {
       const response = await dashboardService.getComparativeData(
         companyId,
@@ -227,11 +229,13 @@ const DashboardD = () => {
         setRadarData(response);
         console.log("Radar data fetched:", response);
       }
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching radar data:", error);
       setRadarData([]);
+      setLoading(false);
     }
-  };  
+  };
 
   const handleCompanyChange = async (companyId: string) => {
     setSelectedCompany(companyId);
@@ -240,7 +244,6 @@ const DashboardD = () => {
     if (companyId !== "todas") {
       await fetchDashboardData(companyId);
       await getRadarDataAPI(companyId, ""); // Fetch radar data for the selected company
-    
     } else {
       setDashboardData({
         section1: {
@@ -307,18 +310,17 @@ const DashboardD = () => {
     return null;
   };
 
-
   useEffect(() => {
     if (selectedCompany !== "todas") {
       getRadarDataAPI(compareCompany1, compareCompany2);
     } else {
-
       setRadarData([]);
     }
   }, [compareCompany1, compareCompany2]);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <NavigationD />
+      { loading && (<FullSpinner message="Cargando..."  />)}
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
@@ -461,7 +463,7 @@ const DashboardD = () => {
         )}
 
         {/* Nueva gráfica radial comparativa */}
-       {selectedCompany !== "todas" && (
+        {selectedCompany !== "todas" && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>Análisis Comparativo por Empresa</CardTitle>
@@ -524,7 +526,7 @@ const DashboardD = () => {
                       <SelectValue placeholder="Seleccionar empresa" />
                     </SelectTrigger>
                     <SelectContent>
-                    {companies.map((company) => (
+                      {companies.map((company) => (
                         <SelectItem key={company._id} value={company._id}>
                           🏢 {company.name}
                         </SelectItem>
@@ -536,10 +538,7 @@ const DashboardD = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
-                <RadarChart
-                  data={getRadarData()}
-                  key={`${dashboardData}`}
-                >
+                <RadarChart data={getRadarData()} key={`${dashboardData}`}>
                   <PolarGrid />
                   <PolarAngleAxis dataKey="area" />
                   <PolarRadiusAxis
@@ -578,7 +577,7 @@ const DashboardD = () => {
               )}
             </CardContent>
           </Card>
-        )} 
+        )}
 
         {/* Gráficos principales */}
 

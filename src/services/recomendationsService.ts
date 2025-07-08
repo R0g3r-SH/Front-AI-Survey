@@ -34,4 +34,15 @@ export const recomendationsService = {
     }
     return response.data;
   },
+  generateTechStack : async (companyId: string) => {
+    if (!companyId) {
+      throw new Error("Company ID is required to generate tech stack");
+    }
+    const response = await api.get(`/recomendations/techstack/${companyId}`);
+
+    if (response.status !== 200) {
+      throw new Error("Failed to generate tech stack");
+    }
+    return response.data;
+  }
 };

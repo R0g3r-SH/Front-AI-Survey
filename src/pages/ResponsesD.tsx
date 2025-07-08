@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
+import FullSpinner from "@/components/FullSpinner"; // Asegúrate de que este componente esté configurado correctamente
+
 import {
   User,
   Building,
@@ -29,14 +31,16 @@ const Responses = () => {
   const [surveyData, setSurveyData] = useState<any>([]);
   const [selectedCompany, setSelectedCompany] = useState("todas");
   const [companies, setCompanies] = useState<any>([]);
-
+  const [globalLoading, setGlobalLoading] = useState(true);
   useEffect(() => {
     const fetchData = async () => {
+      setGlobalLoading(true);
       const companiesData = await companyService.getAllCompanies();
 
       if (companiesData) {
         setCompanies(companiesData);
       }
+      setGlobalLoading(false);
     };
 
     fetchData();
@@ -44,11 +48,14 @@ const Responses = () => {
 
   const fetchSurveyData = async (companyId: string) => {
     try {
+      setGlobalLoading(true);
       const response = await companyService.getCompanyById(companyId);
       if (response && response.surveys) {
         setSurveyData(response.surveys);
       }
+      setGlobalLoading(false);
     } catch (error) {
+      setGlobalLoading(false);
       console.error("Error fetching survey data:", error);
       setSurveyData([]);
     }
@@ -87,6 +94,7 @@ const Responses = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <NavigationD />
+      { globalLoading && (<FullSpinner message="Cargando..."  />)}
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8 text-center">

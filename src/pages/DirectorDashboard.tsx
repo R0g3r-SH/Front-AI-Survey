@@ -108,7 +108,7 @@ const DirectorDashboard = () => {
                   Visualiza métricas por empresa, tendencias y oportunidades de automatización identificadas.
                 </p>
                 <Button 
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate('/directores-dashboard')}
                   className="w-full bg-purple-600 hover:bg-purple-700"
                 >
                   Ir al Dashboard Multi-empresa
@@ -127,7 +127,7 @@ const DirectorDashboard = () => {
                   Accede a planes de adopción de IA personalizados por empresa con roadmap, costos y estrategia.
                 </p>
                 <Button 
-                  onClick={() => navigate('/recommendations')}
+                  onClick={() => navigate('/directores-recommendations')}
                   className="w-full bg-orange-600 hover:bg-orange-700"
                 >
                   Ver Recomendaciones por Empresa

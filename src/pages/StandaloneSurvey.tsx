@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import SurveyLayout from "@/components/SurveyLayout";
 import { surveyService } from "@/services/surveyService";
 import { useParams } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
 
 const StandaloneSurvey = () => {
   const { companyId, tkn } = useParams();
@@ -72,15 +73,12 @@ const StandaloneSurvey = () => {
     trainingFormats: [],
   });
 
-  const { toast } = useToast();
   const totalSteps = 8;
   const progress = (currentStep / totalSteps) * 100;
 
   // Capturar información de empresa desde la URL
   useEffect(() => {
-   
     if (companyId && tkn) {
-
       console.log("Company ID:", companyId);
       console.log("Token:", tkn);
       const companyData = {
@@ -246,9 +244,149 @@ const StandaloneSurvey = () => {
     }));
   };
 
+  type FormDataType = typeof formData;
+
+  const validateStepCompletion = (
+    currentStep: number,
+    formData: FormDataType
+  ): { valid: boolean; missingFields: string[] } => {
+    const missingFields: string[] = [];
+
+    switch (currentStep) {
+      case 1: // Información Personal
+        if (!formData.name.trim()) missingFields.push("Nombre completo");
+        if (!formData.email.trim()) missingFields.push("Email");
+        if (!formData.department.trim()) missingFields.push("Departamento");
+        if (!formData.role.trim()) missingFields.push("Puesto");
+        if (!formData.experience.trim())
+          missingFields.push("Años de experiencia");
+        return {
+          valid: missingFields.length === 0,
+          missingFields,
+        };
+
+      case 2: // Inventario de Tareas
+        if (!formData.mainTasks.some((task) => task.trim() !== "")) {
+          missingFields.push("Al menos una tarea principal");
+        }
+        if (formData.applicationsUsed.length === 0) {
+          missingFields.push("Aplicaciones utilizadas");
+        }
+        return {
+          valid: missingFields.length === 0,
+          missingFields,
+        };
+
+      case 3: // Viabilidad de Automatización
+        formData.mainTasks.forEach((task, index) => {
+          if (task.trim() !== "") {
+            const taskDetail = formData.taskDetails[index];
+            if (!taskDetail.frequency.trim())
+              missingFields.push(`Frecuencia para Tarea ${index + 1}`);
+            if (!taskDetail.structureLevel.trim())
+              missingFields.push(
+                `Nivel de estructuración para Tarea ${index + 1}`
+              );
+            if (!taskDetail.impact.trim())
+              missingFields.push(`Impacto para Tarea ${index + 1}`);
+            if (!taskDetail.dataAvailability.trim())
+              missingFields.push(
+                `Disponibilidad de datos para Tarea ${index + 1}`
+              );
+          }
+        });
+
+        if (
+          missingFields.length === 0 &&
+          !formData.mainTasks.some((task) => task.trim() !== "")
+        ) {
+          missingFields.push("Al menos una tarea principal completada");
+        }
+        return {
+          valid: missingFields.length === 0,
+          missingFields,
+        };
+
+      case 4: // Tareas Diarias Adicionales
+        if (
+          !formData.dailyTasks.trim() &&
+          !formData.timeConsumingTasks.trim() &&
+          !formData.repetitiveTasks.trim()
+        ) {
+          missingFields.push("Al menos un campo de tareas adicionales");
+        }
+        return {
+          valid: missingFields.length === 0,
+          missingFields,
+        };
+
+      case 5: // Conocimiento en IA
+        if (!formData.aiKnowledge.trim())
+          missingFields.push("Nivel de conocimiento en IA");
+        if (formData.toolsUsed.length === 0)
+          missingFields.push("Herramientas de IA utilizadas");
+        return {
+          valid: missingFields.length === 0,
+          missingFields,
+        };
+
+      case 6: // Casos de Uso Específicos
+        if (
+          formData.documentTasks.length === 0 &&
+          formData.communicationTasks.length === 0 &&
+          formData.analysisTasks.length === 0 &&
+          formData.creativeTasks.length === 0
+        ) {
+          missingFields.push("Al menos un caso de uso en alguna categoría");
+        }
+        return {
+          valid: missingFields.length === 0,
+          missingFields,
+        };
+
+      case 7: // Evaluación de Impacto
+        if (!formData.taskPriority.trim())
+          missingFields.push("Prioridad de automatización");
+        if (!formData.automationBenefit.trim())
+          missingFields.push("Tiempo ahorrado con automatización");
+        if (!formData.implementationComplexity.trim())
+          missingFields.push("Complejidad de implementación");
+        return {
+          valid: missingFields.length === 0,
+          missingFields,
+        };
+
+      case 8: // Roadmap de Adopción
+        if (!formData.trainingTime.trim())
+          missingFields.push("Tiempo disponible para formación");
+        if (formData.trainingFormats.length === 0)
+          missingFields.push("Formatos de entrenamiento preferidos");
+        return {
+          valid: missingFields.length === 0,
+          missingFields,
+        };
+
+      default:
+        return {
+          valid: false,
+          missingFields: ["Paso no válido"],
+        };
+    }
+  };
+
   const nextStep = () => {
     if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
+      const validation = validateStepCompletion(currentStep, formData);
+      if (validation.valid) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        toast.error(
+          `Por favor completa los siguientes campos: ${validation.missingFields.join(
+            ", "
+          )}`,
+          { position: "top-right", autoClose: 5000 }
+        );
+      }
     }
   };
 
@@ -272,18 +410,18 @@ const StandaloneSurvey = () => {
 
     // Enviar los datos del cuestionario al servicio
 
-    console.log("Creating survey with data:", surveyResponse , formData.companySlug);
-
+    console.log(
+      "Creating survey with data:",
+      surveyResponse,
+      formData.companySlug
+    );
 
     try {
-      
       await surveyService.createSurvey(surveyResponse, formData.companySlug);
 
-      toast({
-        title: "¡Cuestionario completado!",
-        description: `Tus respuestas han sido guardadas exitosamente${
-          companyInfo.name ? ` para ${companyInfo.name}` : ""
-        }.`,
+      toast.success("¡Cuestionario enviado exitosamente! 🎉", {
+        position: "top-right",
+        autoClose: 5000,
       });
 
       console.log("Survey data:", surveyResponse);
@@ -291,12 +429,10 @@ const StandaloneSurvey = () => {
       setCurrentStep(0);
     } catch (error) {
       console.error("Error al enviar el cuestionario:", error);
-      toast({
-        title: "Error",
-        description:
-          "No se pudo enviar el cuestionario. Inténtalo de nuevo más tarde.",
-        variant: "destructive",
-      });
+      toast.error(
+        "Ocurrió un error al enviar el cuestionario. Por favor, inténtalo de nuevo más tarde.",
+        { position: "top-right", autoClose: 5000 }
+      );
       return;
     }
   };
@@ -1016,6 +1152,7 @@ const StandaloneSurvey = () => {
 
   return (
     <SurveyLayout>
+      <ToastContainer />
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <div className="flex items-center justify-between mb-4">
@@ -1046,7 +1183,22 @@ const StandaloneSurvey = () => {
 
               {currentStep === totalSteps ? (
                 <Button
-                  onClick={submitSurvey}
+                  onClick={() => {
+                    const validation = validateStepCompletion(
+                      currentStep,
+                      formData
+                    );
+                    if (validation.valid) {
+                      submitSurvey();
+                    } else {
+                      toast.error(
+                        `Por favor completa los siguientes campos: ${validation.missingFields.join(
+                          ", "
+                        )}`,
+                        { position: "top-right", autoClose: 5000 }
+                      );
+                    }
+                  }}
                   className="bg-green-600 hover:bg-green-700"
                 >
                   Completar Cuestionario
