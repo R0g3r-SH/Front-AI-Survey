@@ -1,9 +1,11 @@
 import { api } from "./api";
 
 export const surveyService = {
-  createNewSurveyUrl: async (company_name: string) => {
+  createNewSurveyUrl: async (company_name: string ,invitationDate?: string ,contact_email?: string) => {
     const response = await api.post("/surveys/create-survey-url", {
       company_name,
+      invitationDate,
+      contact_email,
     });
 
     return response.data.surveyUrl;

@@ -11,7 +11,8 @@ const NavigationD = () => {
     { path: "/directores-responses", label: "Respuestas" },
     { path: "/directores-dashboard", label: "Dashboard" },
     { path: "/directores-analysis", label: "Análisis" },
-    { path: "/directores-recommendations", label: "Recomendaciones" }
+    { path: "/directores-recommendations", label: "Recomendaciones" },
+    { path: "/directores-envio-masivo", label: "Envio Masivo" }
   ];
 
   return (

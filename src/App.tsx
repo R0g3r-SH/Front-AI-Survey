@@ -17,7 +17,7 @@ import RecommendationsD from "./pages/RecommendationsD";
 import NotFound from "./pages/NotFound";
 import ResponsesD from "./pages/ResponsesD";
 import DashboardD from "./pages/DashboardD";
-
+import BulkSurveySender from "./pages/BulkSurveySender";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +35,7 @@ const App = () => (
           <Route path="/directores-dashboard" element={<DashboardD />} />
           <Route path="/directores-analysis" element={<AnalysisD />} />
           <Route path="/directores-recommendations" element={<RecommendationsD />} />
+          <Route path="/directores-envio-masivo" element={<BulkSurveySender />} />
           <Route path="/survey" element={<Survey />} />
           <Route path="/responses" element={<Responses />} />
           <Route path="/dashboard" element={<Dashboard />} />

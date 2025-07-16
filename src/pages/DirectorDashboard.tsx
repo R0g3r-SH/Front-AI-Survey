@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -6,32 +5,33 @@ import NavigationD from "@/components/NavigationD";
 import CompanyLinkGenerator from "@/components/CompanyLinkGenerator";
 import { surveyService } from "@/services/surveyService";
 
-
 const DirectorDashboard = () => {
   const navigate = useNavigate();
 
   const copyToClipboard = async () => {
-    
-    const surveyUrl =  await surveyService.createNewSurveyUrl("");
+    const surveyUrl = await surveyService.createNewSurveyUrl("");
     try {
       await navigator.clipboard.writeText(surveyUrl);
-      alert('¡Enlace copiado al portapapeles!');
+      alert("¡Enlace copiado al portapapeles!");
     } catch (err) {
-      console.error('Error al copiar:', err);
-      alert(`Enlace del cuestionario: ${surveyUrl}`);
+      console.error("Error al copiar:", err);
+      alert(`No se pudo copiar el enlace: ${err.message}`);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <NavigationD />
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Panel de Control - Directores</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Panel de Control - Directores
+            </h1>
             <p className="text-xl text-gray-600">
-              Gestiona el proceso de diagnóstico de IA para múltiples organizaciones
+              Gestiona el proceso de diagnóstico de IA para múltiples
+              organizaciones
             </p>
           </div>
 
@@ -44,11 +44,12 @@ const DirectorDashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-emerald-700 mb-4">
-                Genera enlaces únicos para cada empresa y mantén sus respuestas organizadas por separado.
+                Genera enlaces únicos para cada empresa y mantén sus respuestas
+                organizadas por separado.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <CompanyLinkGenerator />
-                <Button 
+                <Button
                   onClick={copyToClipboard}
                   variant="outline"
                   className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
@@ -68,13 +69,24 @@ const DirectorDashboard = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">
-                  Comparte enlaces del cuestionario con empleados de diferentes empresas para recopilar información específica de cada organización.
+                  Comparte enlaces del cuestionario con empleados de diferentes
+                  empresas para recopilar información específica de cada
+                  organización.
                 </p>
                 <div className="bg-blue-50 p-3 rounded-lg">
                   <p className="text-sm text-blue-600 font-medium">
-                    💡 Usa el generador de enlaces de arriba para crear enlaces específicos por empresa
+                    💡 Usa el generador de enlaces de arriba para crear enlaces
+                    específicos por empresa y distribuirlos a los empleados
+                    correspondientes.
                   </p>
                 </div>
+
+                <Button
+                  className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700"
+                  onClick={() => navigate("/directores-envio-masivo")}
+                >
+                  Disribuir Cuestionario Masivamente
+                </Button>
               </CardContent>
             </Card>
 
@@ -86,10 +98,11 @@ const DirectorDashboard = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">
-                  Revisa las respuestas recopiladas filtradas por empresa y analiza los patrones identificados.
+                  Revisa las respuestas recopiladas filtradas por empresa y
+                  analiza los patrones identificados.
                 </p>
-                <Button 
-                  onClick={() => navigate('/directores-responses')}
+                <Button
+                  onClick={() => navigate("/directores-responses")}
                   className="w-full bg-green-600 hover:bg-green-700"
                 >
                   Ver Respuestas por Empresa
@@ -105,10 +118,11 @@ const DirectorDashboard = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">
-                  Visualiza métricas por empresa, tendencias y oportunidades de automatización identificadas.
+                  Visualiza métricas por empresa, tendencias y oportunidades de
+                  automatización identificadas.
                 </p>
-                <Button 
-                  onClick={() => navigate('/directores-dashboard')}
+                <Button
+                  onClick={() => navigate("/directores-dashboard")}
                   className="w-full bg-purple-600 hover:bg-purple-700"
                 >
                   Ir al Dashboard Multi-empresa
@@ -124,10 +138,11 @@ const DirectorDashboard = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">
-                  Accede a planes de adopción de IA personalizados por empresa con roadmap, costos y estrategia.
+                  Accede a planes de adopción de IA personalizados por empresa
+                  con roadmap, costos y estrategia.
                 </p>
-                <Button 
-                  onClick={() => navigate('/directores-recommendations')}
+                <Button
+                  onClick={() => navigate("/directores-recommendations")}
                   className="w-full bg-orange-600 hover:bg-orange-700"
                 >
                   Ver Recomendaciones por Empresa
@@ -138,29 +153,44 @@ const DirectorDashboard = () => {
 
           <Card className="bg-blue-50 border-blue-200">
             <CardHeader>
-              <CardTitle className="text-blue-800">💡 Instrucciones para Directores</CardTitle>
+              <CardTitle className="text-blue-800">
+                💡 Instrucciones para Directores
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3 text-blue-700">
                 <div className="flex items-start gap-2">
                   <span className="font-bold">1.</span>
-                  <span>Genera enlaces específicos para cada empresa usando el botón "Generar Enlace por Empresa"</span>
+                  <span>
+                    Genera enlaces específicos para cada empresa usando el botón
+                    "Generar Enlace por Empresa"
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="font-bold">2.</span>
-                  <span>Comparte el enlace específico con los empleados de cada empresa</span>
+                  <span>
+                    Comparte el enlace específico con los empleados de cada
+                    empresa
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="font-bold">3.</span>
-                  <span>Monitorea las respuestas organizadas por empresa en "Ver Respuestas"</span>
+                  <span>
+                    Monitorea las respuestas organizadas por empresa en "Ver
+                    Respuestas"
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="font-bold">4.</span>
-                  <span>Analiza datos específicos por empresa en el Dashboard</span>
+                  <span>
+                    Analiza datos específicos por empresa en el Dashboard
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="font-bold">5.</span>
-                  <span>Revisa recomendaciones personalizadas para cada organización</span>
+                  <span>
+                    Revisa recomendaciones personalizadas para cada organización
+                  </span>
                 </div>
               </div>
             </CardContent>
