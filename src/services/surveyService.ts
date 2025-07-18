@@ -29,4 +29,18 @@ export const surveyService = {
 
     return response.data;
   },
+
+  bulkUpload: async (file: File, companyId: string) => {
+    const formData = new FormData();
+    formData.append('csvFile', file);
+    formData.append('companyId', companyId);
+
+    const response = await api.post('/bulk/bulk-upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+
+    return response.data;
+  }
 };
