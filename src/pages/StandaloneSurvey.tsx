@@ -34,6 +34,7 @@ const StandaloneSurvey = () => {
     department: "",
     role: "",
     experience: "",
+    totalExperience: "",
 
     // Inventario de tareas
     mainTasks: ["", "", "", "", ""],
@@ -107,27 +108,64 @@ const StandaloneSurvey = () => {
     "Otro",
   ];
 
-  const applications = [
-    "Microsoft Office (Word, Excel, PowerPoint)",
-    "Google Workspace (Docs, Sheets, Slides)",
-    "Outlook / Gmail",
-    "Microsoft Teams / Slack",
-    "Salesforce",
-    "SAP",
-    "Oracle",
-    "HubSpot",
-    "Zendesk",
-    "Jira",
-    "Notion",
-    "Trello / Asana",
-    "Adobe Creative Suite",
-    "AutoCAD",
-    "Tableau / Power BI",
-    "Zoom / Meet",
-    "SharePoint",
-    "OneDrive / Google Drive",
-    "Otra",
-  ];
+  const applicationsByCategory = {
+    ERP: [
+      "SAP S/4HANA",
+      "Oracle E-Business Suite",
+      "Microsoft Dynamics 365 F&O",
+      "NetSuite",
+      "Odoo",
+    ],
+    CRM: [
+      "Salesforce",
+      "HubSpot",
+      "Microsoft Dynamics 365 CRM",
+      "Zoho CRM",
+      "Pipedrive",
+    ],
+    "BI / Analytics": [
+      "Power BI",
+      "Tableau",
+      "Looker / Looker Studio",
+      "Qlik Sense",
+      "Google Data Studio",
+    ],
+    "Ofimática & Productividad": [
+      "Microsoft Office (Word/Excel/PowerPoint)",
+      "Google Workspace (Docs/Sheets/Slides)",
+      "LibreOffice",
+      "Notion",
+    ],
+    "Colaboración & Comunicación": [
+      "Microsoft Teams",
+      "Slack",
+      "Google Chat/Meet",
+      "Zoom",
+      "Trello / Asana",
+    ],
+    "IA Generativa / Copilots": [
+      "ChatGPT",
+      "Gemini",
+      "Microsoft Copilot (M365)",
+      "GitHub Copilot",
+      "Midjourney",
+    ],
+    "Automatización / RPA & No-Code": [
+      "UiPath",
+      "Power Automate",
+      "Zapier",
+      "Make (Integromat)",
+      "Automation Anywhere",
+    ],
+    "Bases de Datos / Data Ops": [
+      "MySQL / MariaDB",
+      "PostgreSQL",
+      "SQL Server",
+      "BigQuery",
+      "Snowflake",
+    ],
+    "Otra herramienta": ["Otra"], // o puedes dejarlo como campo abierto
+  };
 
   const aiTools = [
     "ChatGPT",
@@ -260,14 +298,23 @@ const StandaloneSurvey = () => {
         if (!formData.role.trim()) missingFields.push("Puesto");
         if (!formData.experience.trim())
           missingFields.push("Años de experiencia");
+
+        if (!formData.totalExperience.trim())
+          missingFields.push("Años de experiencia profesional");
+
         return {
           valid: missingFields.length === 0,
           missingFields,
         };
 
       case 2: // Inventario de Tareas
-        if (!formData.mainTasks.some((task) => task.trim() !== "")) {
-          missingFields.push("Al menos una tarea principal");
+        // Contar cuántas tareas tienen contenido (no están vacías después de trim)
+        const filledTasksCount = formData.mainTasks.filter(
+          (task) => task.trim() !== ""
+        ).length;
+
+        if (filledTasksCount < 3) {
+          missingFields.push("Se requieren al menos 3 tareas principales");
         }
         if (formData.applicationsUsed.length === 0) {
           missingFields.push("Aplicaciones utilizadas");
@@ -277,98 +324,9 @@ const StandaloneSurvey = () => {
           missingFields,
         };
 
-      case 3: // Viabilidad de Automatización
-        formData.mainTasks.forEach((task, index) => {
-          if (task.trim() !== "") {
-            const taskDetail = formData.taskDetails[index];
-            if (!taskDetail.frequency.trim())
-              missingFields.push(`Frecuencia para Tarea ${index + 1}`);
-            if (!taskDetail.structureLevel.trim())
-              missingFields.push(
-                `Nivel de estructuración para Tarea ${index + 1}`
-              );
-            if (!taskDetail.impact.trim())
-              missingFields.push(`Impacto para Tarea ${index + 1}`);
-            if (!taskDetail.dataAvailability.trim())
-              missingFields.push(
-                `Disponibilidad de datos para Tarea ${index + 1}`
-              );
-          }
-        });
-
-        if (
-          missingFields.length === 0 &&
-          !formData.mainTasks.some((task) => task.trim() !== "")
-        ) {
-          missingFields.push("Al menos una tarea principal completada");
-        }
-        return {
-          valid: missingFields.length === 0,
-          missingFields,
-        };
-
-      case 4: // Tareas Diarias Adicionales
-        if (
-          !formData.dailyTasks.trim() &&
-          !formData.timeConsumingTasks.trim() &&
-          !formData.repetitiveTasks.trim()
-        ) {
-          missingFields.push("Al menos un campo de tareas adicionales");
-        }
-        return {
-          valid: missingFields.length === 0,
-          missingFields,
-        };
-
-      case 5: // Conocimiento en IA
-        if (!formData.aiKnowledge.trim())
-          missingFields.push("Nivel de conocimiento en IA");
-        if (formData.toolsUsed.length === 0)
-          missingFields.push("Herramientas de IA utilizadas");
-        return {
-          valid: missingFields.length === 0,
-          missingFields,
-        };
-
-      case 6: // Casos de Uso Específicos
-        if (
-          formData.documentTasks.length === 0 &&
-          formData.communicationTasks.length === 0 &&
-          formData.analysisTasks.length === 0 &&
-          formData.creativeTasks.length === 0
-        ) {
-          missingFields.push("Al menos un caso de uso en alguna categoría");
-        }
-        return {
-          valid: missingFields.length === 0,
-          missingFields,
-        };
-
-      case 7: // Evaluación de Impacto
-        if (!formData.taskPriority.trim())
-          missingFields.push("Prioridad de automatización");
-        if (!formData.automationBenefit.trim())
-          missingFields.push("Tiempo ahorrado con automatización");
-        if (!formData.implementationComplexity.trim())
-          missingFields.push("Complejidad de implementación");
-        return {
-          valid: missingFields.length === 0,
-          missingFields,
-        };
-
-      case 8: // Roadmap de Adopción
-        if (!formData.trainingTime.trim())
-          missingFields.push("Tiempo disponible para formación");
-        if (formData.trainingFormats.length === 0)
-          missingFields.push("Formatos de entrenamiento preferidos");
-        return {
-          valid: missingFields.length === 0,
-          missingFields,
-        };
-
       default:
         return {
-          valid: false,
+          valid: true,
           missingFields: ["Paso no válido"],
         };
     }
@@ -436,6 +394,28 @@ const StandaloneSurvey = () => {
       return;
     }
   };
+
+  //new fields
+  // Inside your component
+  const [showOtherMotivation, setShowOtherMotivation] = useState(false);
+  const [otherMotivation, setOtherMotivation] = useState("");
+
+  const handleMotivationChange = (value) => {
+    handleInputChange("AI_learning_motivation", value);
+    setShowOtherMotivation(value === "5");
+    if (value !== "5") {
+      setOtherMotivation("");
+      handleInputChange("AI_learning_motivation_other", "");
+    }
+  };
+
+  const handleOtherMotivationChange = (e) => {
+    const value = e.target.value;
+    setOtherMotivation(value);
+    handleInputChange("AI_learning_motivation_other", value);
+  };
+
+  const [otherToolText, setOtherToolText] = useState("");
 
   const renderStep = () => {
     if (currentStep === 0) {
@@ -552,6 +532,30 @@ const StandaloneSurvey = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona tu experiencia" />
                 </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="0-1">0-1 años</SelectItem>
+                  <SelectItem value="2-3">2-3 años</SelectItem>
+                  <SelectItem value="4-5">4-5 años</SelectItem>
+                  <SelectItem value="6-10">6-10 años</SelectItem>
+                  <SelectItem value="10+">Más de 10 años</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="experience">
+                Años de experiencia profesional
+              </Label>
+              <Select
+                onValueChange={(value) =>
+                  handleInputChange("totalExperience", value)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona tu experiencia total" />
+                </SelectTrigger>
+
                 <SelectContent>
                   <SelectItem value="0-1">0-1 años</SelectItem>
                   <SelectItem value="2-3">2-3 años</SelectItem>
@@ -599,25 +603,58 @@ const StandaloneSurvey = () => {
                 <Label className="text-lg font-semibold">
                   2. ¿Qué aplicaciones usas? (selecciona todas las que apliquen)
                 </Label>
-                <div className="grid md:grid-cols-2 gap-3 max-h-60 overflow-y-auto">
-                  {applications.map((app) => (
-                    <div key={app} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={app}
-                        checked={formData.applicationsUsed.includes(app)}
-                        onCheckedChange={(checked) =>
-                          handleCheckboxChange(
-                            "applicationsUsed",
-                            app,
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <Label htmlFor={app} className="text-sm">
-                        {app}
-                      </Label>
-                    </div>
-                  ))}
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {Object.entries(applicationsByCategory).map(
+                    ([category, apps]) => (
+                      <div key={category} className="space-y-2">
+                        <Label className="text-md font-medium text-gray-700">
+                          {category}
+                        </Label>
+                        <div className="grid md:grid-cols-2 gap-3 pl-4">
+                          {apps.map((app) => (
+                            <div
+                              key={app}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={app}
+                                checked={formData.applicationsUsed.includes(
+                                  app
+                                )}
+                                onCheckedChange={(checked) =>
+                                  handleCheckboxChange(
+                                    "applicationsUsed",
+                                    app,
+                                    checked as boolean
+                                  )
+                                }
+                              />
+                              <Label
+                                htmlFor={app}
+                                className="text-sm whitespace-nowrap"
+                              >
+                                {app}
+                              </Label>
+
+                              {/* Mostrar input junto a "Otra" */}
+                              {app === "Otra" &&
+                                formData.applicationsUsed.includes("Otra") && (
+                                  <input
+                                    type="text"
+                                    value={otherToolText}
+                                    onChange={(e) =>
+                                      setOtherToolText(e.target.value)
+                                    }
+                                    placeholder="Especifica..."
+                                    className="ml-2 p-1 border border-gray-300 rounded-md text-sm w-52"
+                                  />
+                                )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
             </div>
@@ -661,9 +698,13 @@ const StandaloneSurvey = () => {
                               <SelectValue placeholder="Selecciona frecuencia" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="diaria">Diaria</SelectItem>
-                              <SelectItem value="semanal">Semanal</SelectItem>
-                              <SelectItem value="mensual">Mensual</SelectItem>
+                              <SelectItem value="1">
+                                Ad-hoc (≤1 vez/mes)
+                              </SelectItem>
+                              <SelectItem value="2">Trimestral</SelectItem>
+                              <SelectItem value="3">Mensual</SelectItem>
+                              <SelectItem value="4">Semanal</SelectItem>
+                              <SelectItem value="5">Diaria</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -680,15 +721,23 @@ const StandaloneSurvey = () => {
                             }
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Nivel de estructura" />
+                              <SelectValue placeholder="Nivel de estructuración" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="muy-estructurada">
-                                Muy estructurada
+                              <SelectItem value="1">
+                                Totalmente ad-hoc (improvisado)
                               </SelectItem>
-                              <SelectItem value="parcial">Parcial</SelectItem>
-                              <SelectItem value="no-estructurada">
-                                No estructurada
+                              <SelectItem value="2">
+                                Guías informales
+                              </SelectItem>
+                              <SelectItem value="3">
+                                Checklist parcial
+                              </SelectItem>
+                              <SelectItem value="4">
+                                Proceso documentado
+                              </SelectItem>
+                              <SelectItem value="5">
+                                Workflow automatizado (RPA/BPM)
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -705,9 +754,21 @@ const StandaloneSurvey = () => {
                               <SelectValue placeholder="Nivel de impacto" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="alto">Alto</SelectItem>
-                              <SelectItem value="medio">Medio</SelectItem>
-                              <SelectItem value="bajo">Bajo</SelectItem>
+                              <SelectItem value="1">
+                                Afecta poco o ningún KPI
+                              </SelectItem>
+                              <SelectItem value="2">
+                                Bajo impacto local
+                              </SelectItem>
+                              <SelectItem value="3">
+                                Impacto moderado en área
+                              </SelectItem>
+                              <SelectItem value="4">
+                                Impacto alto en KPI de negocio
+                              </SelectItem>
+                              <SelectItem value="5">
+                                Crítico para ingresos/cliente
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -727,9 +788,80 @@ const StandaloneSurvey = () => {
                               <SelectValue placeholder="Disponibilidad" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="si">Sí</SelectItem>
-                              <SelectItem value="parcial">Parcial</SelectItem>
-                              <SelectItem value="no">No</SelectItem>
+                              <SelectItem value="1">
+                                Sin datos o no accesibles
+                              </SelectItem>
+                              <SelectItem value="2">
+                                Datos dispersos/no limpios
+                              </SelectItem>
+                              <SelectItem value="3">Datos parciales</SelectItem>
+                              <SelectItem value="4">
+                                Datos completos pero dispersos
+                              </SelectItem>
+                              <SelectItem value="5">
+                                Datos completos y estructurados
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>KPI impactado (marca uno)</Label>
+                          <Select
+                            onValueChange={(value) =>
+                              handleTaskDetailChange(index, "kpiImpact", value)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Nivel de impacto" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                              <SelectItem value="1">
+                                Incrementar ventas / ingresos
+                              </SelectItem>
+                              <SelectItem value="2">
+                                Reducir costos operativos
+                              </SelectItem>
+                              <SelectItem value="3">
+                                Mejorar satisfacción del cliente (NPS)
+                              </SelectItem>
+                              <SelectItem value="4">
+                                Acelerar tiempo de ciclo / entrega
+                              </SelectItem>
+                              <SelectItem value="5">
+                                Cumplir requisitos regulatorios
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Severidad si la tarea falla</Label>
+                          <Select
+                            onValueChange={(value) =>
+                              handleTaskDetailChange(
+                                index,
+                                "severityImpact",
+                                value
+                              )
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Nivel de impacto" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">Nula</SelectItem>
+                              <SelectItem value="2">Menor retrabajo</SelectItem>
+                              <SelectItem value="3">
+                                Retraso moderado
+                              </SelectItem>
+                              <SelectItem value="4">
+                                Pérdida de clientes / multas menores
+                              </SelectItem>
+                              <SelectItem value="5">
+                                Riesgo reputacional o multas fuertes
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -746,57 +878,117 @@ const StandaloneSurvey = () => {
           <div className="space-y-6">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold mb-4">
-                Tareas Diarias Adicionales
+                Actitud cultural frente a la IA
               </h2>
               <p className="text-gray-600">
-                Describe otras actividades que realizas habitualmente
+                Como describirías tu interés respecto a la IA
               </p>
             </div>
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="dailyTasks">
-                  ¿Cuáles son otras tareas diarias importantes?
+                <Label htmlFor="aiKnowledge">
+                  Curiosidad: “Me entusiasma experimentar con IA”
                 </Label>
-                <Textarea
-                  id="dailyTasks"
-                  value={formData.dailyTasks}
-                  onChange={(e) =>
-                    handleInputChange("dailyTasks", e.target.value)
+                <Select
+                  onValueChange={(value) =>
+                    handleInputChange("aiKnowledge", value)
                   }
-                  placeholder="Describe otras actividades que realizas día a día..."
-                  rows={4}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona tu nivel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">
+                      Nunca he buscado información sobre IA.
+                    </SelectItem>
+                    <SelectItem value="2">
+                      He leído un artículo o visto un video, pero no he probado
+                      nada.
+                    </SelectItem>
+                    <SelectItem value="3">
+                      He probado un chatbot o generador de imágenes por
+                      curiosidad.
+                    </SelectItem>
+                    <SelectItem value="4">
+                      Pruebo nuevas apps IA cada mes y comparto hallazgos con mi
+                      equipo.
+                    </SelectItem>
+                    <SelectItem value="5">
+                      Prototipo regularmente y enseño a otros (ej.: hackathons
+                      internos).
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-
+            </div>
+            <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="timeConsumingTasks">
-                  ¿Qué tareas te consumen más tiempo?
+                <Label htmlFor="aiKnowledge">
+                  Cautela: “Prefiero esperar a que otros validen la IA”
                 </Label>
-                <Textarea
-                  id="timeConsumingTasks"
-                  value={formData.timeConsumingTasks}
-                  onChange={(e) =>
-                    handleInputChange("timeConsumingTasks", e.target.value)
+                <Select
+                  onValueChange={(value) =>
+                    handleInputChange("aiKnowledge", value)
                   }
-                  placeholder="Identifica las actividades que más tiempo te toman..."
-                  rows={4}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona tu nivel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">
+                      No me preocupa el riesgo; usaría cualquier app sin
+                      validar.
+                    </SelectItem>
+                    <SelectItem value="2">
+                      Alguna vez pregunto sobre seguridad, pero no profundizo.
+                    </SelectItem>
+                    <SelectItem value="3">
+                      Reviso referencias o políticas básicas antes de usar IA.
+                    </SelectItem>
+                    <SelectItem value="4">
+                      Solicito pruebas piloto y aprobación de TI antes de
+                      adoptar una herramienta.
+                    </SelectItem>
+                    <SelectItem value="5">
+                      Participo en comités de riesgo y elaboro checklists
+                      formales.
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-
+            </div>
+            <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="repetitiveTasks">
-                  ¿Tienes tareas repetitivas que haces frecuentemente?
+                <Label htmlFor="aiKnowledge">
+                  Resistencia: “La IA amenaza mi rol”
                 </Label>
-                <Textarea
-                  id="repetitiveTasks"
-                  value={formData.repetitiveTasks}
-                  onChange={(e) =>
-                    handleInputChange("repetitiveTasks", e.target.value)
+                <Select
+                  onValueChange={(value) =>
+                    handleInputChange("aiKnowledge", value)
                   }
-                  placeholder="Describe las tareas que repites con frecuencia..."
-                  rows={4}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona tu nivel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">
+                      En absoluto; veo la IA como aliada.
+                    </SelectItem>
+                    <SelectItem value="2">
+                      Tengo mínimos temores, pero no afectan mi adopción.
+                    </SelectItem>
+                    <SelectItem value="3">
+                      Mi entusiasmo y mi preocupación están equilibrados.
+                    </SelectItem>
+                    <SelectItem value="4">
+                      Evito usar IA salvo que sea obligatorio.
+                    </SelectItem>
+                    <SelectItem value="5">
+                      Rechazo activamente proyectos de IA o bloqueo su adopción.
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -808,68 +1000,157 @@ const StandaloneSurvey = () => {
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold mb-4">Conocimiento en IA</h2>
               <p className="text-gray-600">
-                Evalúa tu experiencia actual con herramientas de IA
+                Autoevalúa tu dominio y el uso que haces de la IA
               </p>
             </div>
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledge">
-                  ¿Cuál es tu nivel de conocimiento en IA?
-                </Label>
+                <Label htmlFor="aiKnowledge">Conceptos básicos</Label>
                 <Select
                   onValueChange={(value) =>
-                    handleInputChange("aiKnowledge", value)
+                    handleInputChange("basicKnowledge", value)
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona tu nivel" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="principiante">
-                      Principiante - Nunca he usado IA
+                    <SelectItem value="1">
+                      No conozco términos de IA.
                     </SelectItem>
-                    <SelectItem value="basico">
-                      Básico - He probado algunas herramientas
+                    <SelectItem value="2">
+                      Sé que existen “modelos” pero no cómo funcionan.
                     </SelectItem>
-                    <SelectItem value="intermedio">
-                      Intermedio - Uso regularmente algunas herramientas
+
+                    <SelectItem value="3">
+                      Puedo explicar IA vs. ML y citar ejemplos.
                     </SelectItem>
-                    <SelectItem value="avanzado">
-                      Avanzado - Integro IA en mi trabajo diario
+                    <SelectItem value="4">
+                      Explico pipelines de datos-modelo-despliegue.
                     </SelectItem>
-                    <SelectItem value="experto">
-                      Experto - Desarrollo soluciones con IA
+                    <SelectItem value="5">
+                      Diseño arquitecturas con LLM, RAG, vectores, etc.
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
-              <div className="space-y-3">
-                <Label>
-                  ¿Qué herramientas de IA has usado? (selecciona todas las que
-                  apliquen)
-                </Label>
-                <div className="grid md:grid-cols-3 gap-3">
-                  {aiTools.map((tool) => (
-                    <div key={tool} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={tool}
-                        checked={formData.toolsUsed.includes(tool)}
-                        onCheckedChange={(checked) =>
-                          handleCheckboxChange(
-                            "toolsUsed",
-                            tool,
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <Label htmlFor={tool} className="text-sm">
-                        {tool}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="aiKnowledge">Diseño de prompts</Label>
+                <Select
+                  onValueChange={(value) =>
+                    handleInputChange("promptDesign", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona tu nivel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">
+                      No estoy familiarizado con la tarea
+                    </SelectItem>
+                    <SelectItem value="2">
+                      Ajusto palabras clave al azar.
+                    </SelectItem>
+                    <SelectItem value="3">
+                      Sigo buenas prácticas básicas (rol + tarea).
+                    </SelectItem>
+                    <SelectItem value="4">
+                      Creo prompts multi-paso con ejemplos y formato esperado.
+                    </SelectItem>
+                    <SelectItem value="5">
+                      Construyo árboles de prompts y evalúo output
+                      sistemáticamente.
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="aiKnowledge">Integración en flujos</Label>
+                <Select
+                  onValueChange={(value) =>
+                    handleInputChange("aiIntegration", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona tu nivel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Nunca he integrado IA.</SelectItem>
+                    <SelectItem value="2">
+                      Uso IA en tareas personales (p. ej. mails).
+                    </SelectItem>
+                    <SelectItem value="3">
+                      Conecto IA a archivos o al navegador con extensiones.
+                    </SelectItem>
+                    <SelectItem value="4">
+                      Uso APIs/no-code para automatizar un proceso de mi área.
+                    </SelectItem>
+                    <SelectItem value="5">
+                      Desarrollo scripts o micro-servicios con IA en producción.
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="aiKnowledge">Evaluación de riesgo</Label>
+                <Select
+                  onValueChange={(value) =>
+                    handleInputChange("riskAssessment", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona tu nivel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">
+                      Desconozco el concepto de sesgo/privacidad.
+                    </SelectItem>
+                    <SelectItem value="2">
+                      He oído de sesgo, no sé mitigarlo.
+                    </SelectItem>
+                    <SelectItem value="3">
+                      Reviso outputs manualmente para detectar problemas.
+                    </SelectItem>
+                    <SelectItem value="4">
+                      Uso listas de chequeo y métricas de calidad.
+                    </SelectItem>
+                    <SelectItem value="5">
+                      Implemento auditorías, fairness, privacy-by-design.
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="aiKnowledge">Frecuencia de uso</Label>
+                <Select
+                  onValueChange={(value) =>
+                    handleInputChange("usageFrequency", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona tu nivel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Nunca la he usado</SelectItem>
+                    <SelectItem value="2">Ad-hoc (≤1 vez/mes).</SelectItem>
+                    <SelectItem value="3">Mensual.</SelectItem>
+                    <SelectItem value="4">Semanal.</SelectItem>
+                    <SelectItem value="5">Varias veces por semana.</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -880,112 +1161,117 @@ const StandaloneSurvey = () => {
           <div className="space-y-6">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold mb-4">
-                Casos de Uso Específicos
+                Gobierno y ética de IA (Organización)
               </h2>
               <p className="text-gray-600">
-                Identifica qué tareas podrían automatizarse con IA
+                En tu experiencia en la empresa, cual es la situación actual de
+                las siguientes áreas respecto a la IA
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">
-                  📄 Tareas de Documentación
-                </h3>
-                <div className="space-y-2">
-                  {documentTasks.map((task) => (
-                    <div key={task} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`doc-${task}`}
-                        checked={formData.documentTasks.includes(task)}
-                        onCheckedChange={(checked) =>
-                          handleCheckboxChange(
-                            "documentTasks",
-                            task,
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <Label htmlFor={`doc-${task}`} className="text-sm">
-                        {task}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="aiKnowledge">Política de IA responsable</Label>
+                <Select
+                  onValueChange={(value) =>
+                    handleInputChange("aiPolicy", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona tu nivel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">
+                      No existen reglas sobre el uso de IA.
+                    </SelectItem>
+                    <SelectItem value="2">
+                      Hemos hablado del tema, pero nada está escrito.
+                    </SelectItem>
+                    <SelectItem value="3">
+                      Hay un borrador de reglas que se está revisando.
+                    </SelectItem>
+                    <SelectItem value="4">
+                      La política está aprobada y la gente la conoce.
+                    </SelectItem>
+                    <SelectItem value="5">
+                      La política se revisa con frecuencia y un equipo vigila su
+                      cumplimiento.
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
 
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">
-                  💬 Tareas de Comunicación
-                </h3>
-                <div className="space-y-2">
-                  {communicationTasks.map((task) => (
-                    <div key={task} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`comm-${task}`}
-                        checked={formData.communicationTasks.includes(task)}
-                        onCheckedChange={(checked) =>
-                          handleCheckboxChange(
-                            "communicationTasks",
-                            task,
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <Label htmlFor={`comm-${task}`} className="text-sm">
-                        {task}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="aiKnowledge">Gobierno de datos</Label>
+                <Select
+                  onValueChange={(value) =>
+                    handleInputChange("dataGovernance", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona tu nivel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">
+                      Nadie es responsable de los datos.
+                    </SelectItem>
+                    <SelectItem value="2">
+                      Algunas personas cuidan datos, pero sin roles claros ni
+                      revisiones.{" "}
+                    </SelectItem>
+                    <SelectItem value="3">
+                      Se nombraron responsables y se limpian los datos cuando
+                      hace falta.
+                    </SelectItem>
+                    <SelectItem value="4">
+                      Hay reglas claras y se revisa la calidad de los datos con
+                      regularidad.
+                    </SelectItem>
+                    <SelectItem value="5">
+                      Tenemos inventario de datos y monitoreamos calidad todo el
+                      tiempo.
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
 
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">📊 Tareas de Análisis</h3>
-                <div className="space-y-2">
-                  {analysisTasks.map((task) => (
-                    <div key={task} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`analysis-${task}`}
-                        checked={formData.analysisTasks.includes(task)}
-                        onCheckedChange={(checked) =>
-                          handleCheckboxChange(
-                            "analysisTasks",
-                            task,
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <Label htmlFor={`analysis-${task}`} className="text-sm">
-                        {task}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">🎨 Tareas Creativas</h3>
-                <div className="space-y-2">
-                  {creativeTasks.map((task) => (
-                    <div key={task} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`creative-${task}`}
-                        checked={formData.creativeTasks.includes(task)}
-                        onCheckedChange={(checked) =>
-                          handleCheckboxChange(
-                            "creativeTasks",
-                            task,
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <Label htmlFor={`creative-${task}`} className="text-sm">
-                        {task}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="aiKnowledge">Seguridad & privacidad</Label>
+                <Select
+                  onValueChange={(value) =>
+                    handleInputChange("securityPrivacy", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona tu nivel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">
+                      No hay controles; cualquiera puede ver o copiar la
+                      información.
+                    </SelectItem>
+                    <SelectItem value="2">
+                      Contraseñas básicas; a veces marcamos documentos como
+                      “confidencial”.
+                    </SelectItem>
+                    <SelectItem value="3">
+                      Controles básicos de TI (antivirus, contraseñas); sin
+                      revisiones formales.
+                    </SelectItem>
+                    <SelectItem value="4">
+                      Cumplimos políticas internas: copias de seguridad, accesos
+                      limitados.
+                    </SelectItem>
+                    <SelectItem value="5">
+                      Pasamos auditorías externas y protegemos datos de acuerdo
+                      con leyes de privacidad.
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -993,92 +1279,132 @@ const StandaloneSurvey = () => {
 
       case 7:
         return (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold mb-4">Evaluación de Impacto</h2>
               <p className="text-gray-600">
-                Ayúdanos a priorizar las implementaciones
+                Ayúdanos a priorizar la automatización de tus tareas
               </p>
             </div>
+            {formData.mainTasks.map(
+              (task, index) =>
+                task && (
+                  <div key={index} className="border rounded-lg p-6 bg-gray-50">
+                    <h3 className="font-semibold text-lg mb-6">
+                      Evaluación de Impacto - Tarea {index + 1}:{" "}
+                      {task.substring(0, 50)}
+                      {task.length > 50 ? "..." : ""}
+                    </h3>
 
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="taskPriority">
-                  ¿Cuál es la prioridad de automatizar tus tareas?
-                </Label>
-                <Select
-                  onValueChange={(value) =>
-                    handleInputChange("taskPriority", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona la prioridad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="alta">
-                      Alta - Es urgente y crítico
-                    </SelectItem>
-                    <SelectItem value="media">
-                      Media - Sería muy útil
-                    </SelectItem>
-                    <SelectItem value="baja">
-                      Baja - No es prioritario
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label>Prioridad de automatización</Label>
+                        <Select
+                          onValueChange={(value) =>
+                            handleTaskDetailChange(
+                              index,
+                              "automationPriority",
+                              value
+                            )
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona la prioridad" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">
+                            Puede esperar. Si no se hace, nada grave ocurre en los próximos 2 años.
+                            </SelectItem>
+                            <SelectItem value="2">
+                            Sería útil: Aporta valor, pero podemos dejarlo para dentro de 1 a 1½ años.
+                            </SelectItem>
+                            <SelectItem value="3">
+                            Necesario: Conviene resolverlo antes de que acabe el año.
+                            </SelectItem>
+                            <SelectItem value="4">
+                            Urgente: Retrasar más de 3-6 meses nos costará dinero o clientes.
+                            </SelectItem>
+                            <SelectItem value="5">
+                            Crítico: Debemos atenderlo de inmediato; afecta operación o cumplimiento.
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="automationBenefit">
-                  ¿Cuánto tiempo podrías ahorrar con automatización?
-                </Label>
-                <Select
-                  onValueChange={(value) =>
-                    handleInputChange("automationBenefit", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Estima el tiempo ahorrado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1-5">1-5 horas por semana</SelectItem>
-                    <SelectItem value="6-10">6-10 horas por semana</SelectItem>
-                    <SelectItem value="11-20">
-                      11-20 horas por semana
-                    </SelectItem>
-                    <SelectItem value="20+">
-                      Más de 20 horas por semana
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                      <div className="space-y-2">
+                        <Label>Tiempo que podrías ahorrar</Label>
+                        <Select
+                          onValueChange={(value) =>
+                            handleTaskDetailChange(index, "timeSaved", value)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Estima el tiempo ahorrado" />
+                          </SelectTrigger>
 
-              <div className="space-y-2">
-                <Label htmlFor="implementationComplexity">
-                  ¿Qué tan complejo sería implementar estas automatizaciones?
-                </Label>
-                <Select
-                  onValueChange={(value) =>
-                    handleInputChange("implementationComplexity", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Evalúa la complejidad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="baja">
-                      Baja - Herramientas existentes
-                    </SelectItem>
-                    <SelectItem value="media">
-                      Media - Requiere configuración
-                    </SelectItem>
-                    <SelectItem value="alta">
-                      Alta - Desarrollo personalizado
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+                          <SelectContent>
+                            <SelectItem value="<1">
+                              &lt; 1 h por semana
+                            </SelectItem>
+                            <SelectItem value="1-5">
+                              1-5 horas por semana
+                            </SelectItem>
+                            <SelectItem value="6-10">
+                              6-10 horas por semana
+                            </SelectItem>
+                            <SelectItem value="11-20">
+                              11-20 horas por semana
+                            </SelectItem>
+                            <SelectItem value="20+">
+                              Más de 20 horas por semana
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Complejidad de implementación</Label>
+                        <Select
+                          onValueChange={(value) =>
+                            handleTaskDetailChange(
+                              index,
+                              "implementationComplexity",
+                              value
+                            )
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Evalúa la complejidad" />
+                          </SelectTrigger>
+
+                          <SelectContent>
+                            <SelectItem value="1">
+                              Muy fácil: Se resuelve con un click o activando una
+                              opción.
+                            </SelectItem>
+                            <SelectItem value="2">
+                              Fácil: Requiere una simple configuración, sin
+                              ayuda de TI.
+                            </SelectItem>
+                            <SelectItem value="3">
+                              Moderada: Necesita conectar una API o ajustar un
+                              flujo con soporte de TI.
+                            </SelectItem>
+                            <SelectItem value="4">
+                              Complicada: Implica desarrollar código nuevo y
+                              hacer pruebas formales.
+                            </SelectItem>
+                            <SelectItem value="5">
+                              Muy complicada: Exige rediseñar procesos y tocar
+                              varios sistemas críticos.
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                )
+            )}
           </div>
         );
 
@@ -1086,9 +1412,9 @@ const StandaloneSurvey = () => {
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-4">Roadmap de Adopción</h2>
+              <h2 className="text-2xl font-bold mb-4">Roadmap de Adopción (Disponibilidad y Apoyo para tu Capacitación en IA)</h2>
               <p className="text-gray-600">
-                Evalúa tu disposición al cambio y necesidades de capacitación
+              Cuéntanos cuántas horas puedes dedicar cada semana, qué te impulsa a aprender y qué respaldo recibes de tu líder. Con estos datos crearemos un plan de formación realista y alineado a tus necesidades.
               </p>
             </div>
 
@@ -1106,10 +1432,12 @@ const StandaloneSurvey = () => {
                     <SelectValue placeholder="Selecciona el tiempo disponible" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="0-1h">0-1 hora por semana</SelectItem>
-                    <SelectItem value="1-3h">1-3 horas por semana</SelectItem>
-                    <SelectItem value="3h+">
-                      Más de 3 horas por semana
+                    <SelectItem value="0-1">0-1 hora por semana</SelectItem>
+                    <SelectItem value="1-3">1-3 horas por semana</SelectItem>
+                    <SelectItem value="4-6">4-6 horas por semana</SelectItem>
+                    <SelectItem value="7-10">7-10 horas por semana</SelectItem>
+                    <SelectItem value="10+">
+                      Más de 10 horas por semana
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -1140,6 +1468,77 @@ const StandaloneSurvey = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="trainingTime">
+                  Motivación principal para aprender IA
+                </Label>
+                <Select onValueChange={handleMotivationChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona el tiempo disponible" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Desarrollo profesional</SelectItem>
+                    <SelectItem value="2">Eficiencia operativa</SelectItem>
+                    <SelectItem value="3">Curiosidad/Innovación</SelectItem>
+                    <SelectItem value="4">
+                      Cumplir regulaciones y seguridad
+                    </SelectItem>
+                    <SelectItem value="5">Otro</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {showOtherMotivation && (
+                  <div className="mt-2">
+                    <Label htmlFor="otherMotivation">
+                      Especifica tu motivación
+                    </Label>
+                    <input
+                      type="text"
+                      id="otherMotivation"
+                      value={otherMotivation}
+                      onChange={handleOtherMotivationChange}
+                      className="w-full p-2 border rounded"
+                      placeholder="Por favor, especifica tu motivación"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="trainingTime">
+                  Apoyo de tu líder para dedicar tiempo a IA
+                </Label>
+
+                <Select
+                  onValueChange={(value) =>
+                    handleInputChange("AI_learning_leader_support", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona el apoyo de tu líder" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">
+                      Sin Apoyo: Mi líder no autoriza tiempo de capacitación.
+                    </SelectItem>
+                    <SelectItem value="2">
+                      Interés verbal: Revela interés, pero sin tiempo asignado.
+                    </SelectItem>
+                    <SelectItem value="3">
+                      Apoyo puntual: Permite asistir a 1-2 cursos al año.
+                    </SelectItem>
+                    <SelectItem value="4">
+                      Apoyo Activo: Autoriza horas semanales y financia cursos
+                      clave.
+                    </SelectItem>
+                    <SelectItem value="5">
+                      Apoyo estratégico: Incluye IA en OKRs, presupuesto y
+                      tiempo dedicados.
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
