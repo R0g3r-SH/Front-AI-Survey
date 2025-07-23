@@ -39,6 +39,7 @@ const StandaloneSurvey = () => {
     // Inventario de tareas
     mainTasks: ["", "", "", "", ""],
     applicationsUsed: [],
+    otherToolText: "", // Nuevo campo para "Otra herramienta"
 
     // Viabilidad de automatización para cada tarea
     taskDetails: [
@@ -49,10 +50,6 @@ const StandaloneSurvey = () => {
       { frequency: "", structureLevel: "", impact: "", dataAvailability: "" },
     ],
 
-    // Tareas actuales (mantener para compatibilidad)
-    dailyTasks: "",
-    timeConsumingTasks: "",
-    repetitiveTasks: "",
 
     // Conocimiento en IA
     aiKnowledge: "",
@@ -245,6 +242,8 @@ const StandaloneSurvey = () => {
       ...prev,
       [field]: value,
     }));
+
+    console.log("formadata updated:",formData);
   };
 
   const handleTaskChange = (index: number, value: string) => {
@@ -415,7 +414,8 @@ const StandaloneSurvey = () => {
     handleInputChange("AI_learning_motivation_other", value);
   };
 
-  const [otherToolText, setOtherToolText] = useState("");
+  
+
 
   const renderStep = () => {
     if (currentStep === 0) {
@@ -639,15 +639,17 @@ const StandaloneSurvey = () => {
                               {/* Mostrar input junto a "Otra" */}
                               {app === "Otra" &&
                                 formData.applicationsUsed.includes("Otra") && (
-                                  <input
-                                    type="text"
-                                    value={otherToolText}
-                                    onChange={(e) =>
-                                      setOtherToolText(e.target.value)
-                                    }
-                                    placeholder="Especifica..."
-                                    className="ml-2 p-1 border border-gray-300 rounded-md text-sm w-52"
-                                  />
+                             
+
+                                  <Input
+                                  className="w-64 mb-2"
+                                  id="other-tool"
+                                  value={formData.otherToolText}
+                                  onChange={(e) => 
+                                    handleInputChange("otherToolText", e.target.value)
+                                  }
+                                  placeholder="Especifica otra herramienta"
+                                />
                                 )}
                             </div>
                           ))}
@@ -698,7 +700,7 @@ const StandaloneSurvey = () => {
                               <SelectValue placeholder="Selecciona frecuencia" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="1">
+                            <SelectItem value="1">
                                 Ad-hoc (≤1 vez/mes)
                               </SelectItem>
                               <SelectItem value="2">Trimestral</SelectItem>
@@ -887,12 +889,12 @@ const StandaloneSurvey = () => {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledge">
+                <Label htmlFor="aiCuriosity">
                   Curiosidad: “Me entusiasma experimentar con IA”
                 </Label>
                 <Select
                   onValueChange={(value) =>
-                    handleInputChange("aiKnowledge", value)
+                    handleInputChange("aiCuriosity", value)
                   }
                 >
                   <SelectTrigger>
@@ -924,12 +926,12 @@ const StandaloneSurvey = () => {
             </div>
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledge">
+                <Label htmlFor="aiCaution">
                   Cautela: “Prefiero esperar a que otros validen la IA”
                 </Label>
                 <Select
                   onValueChange={(value) =>
-                    handleInputChange("aiKnowledge", value)
+                    handleInputChange("aiCaution", value)
                   }
                 >
                   <SelectTrigger>
@@ -960,12 +962,12 @@ const StandaloneSurvey = () => {
             </div>
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledge">
+                <Label htmlFor="aiResistance">
                   Resistencia: “La IA amenaza mi rol”
                 </Label>
                 <Select
                   onValueChange={(value) =>
-                    handleInputChange("aiKnowledge", value)
+                    handleInputChange("aiResistance", value)
                   }
                 >
                   <SelectTrigger>
@@ -1006,10 +1008,11 @@ const StandaloneSurvey = () => {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledge">Conceptos básicos</Label>
+                <Label htmlFor="aiBasicKnowledge
+                ">Conceptos básicos</Label>
                 <Select
                   onValueChange={(value) =>
-                    handleInputChange("basicKnowledge", value)
+                    handleInputChange("aiBasicKnowledge", value)
                   }
                 >
                   <SelectTrigger>
@@ -1039,10 +1042,10 @@ const StandaloneSurvey = () => {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledge">Diseño de prompts</Label>
+                <Label htmlFor="aiKnowledgePromptDesign">Diseño de prompts</Label>
                 <Select
                   onValueChange={(value) =>
-                    handleInputChange("promptDesign", value)
+                    handleInputChange("aiKnowledgePromptDesign", value)
                   }
                 >
                   <SelectTrigger>
@@ -1072,10 +1075,10 @@ const StandaloneSurvey = () => {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledge">Integración en flujos</Label>
+                <Label htmlFor="aiKnowledgeIntegration">Integración en flujos</Label>
                 <Select
                   onValueChange={(value) =>
-                    handleInputChange("aiIntegration", value)
+                    handleInputChange("aiKnowledgeIntegration", value)
                   }
                 >
                   <SelectTrigger>
@@ -1102,10 +1105,10 @@ const StandaloneSurvey = () => {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledge">Evaluación de riesgo</Label>
+                <Label htmlFor="aiKnowledgeRiskAssessment">Evaluación de riesgo</Label>
                 <Select
                   onValueChange={(value) =>
-                    handleInputChange("riskAssessment", value)
+                    handleInputChange("aiKnowledgeRiskAssessment", value)
                   }
                 >
                   <SelectTrigger>
@@ -1134,10 +1137,10 @@ const StandaloneSurvey = () => {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledge">Frecuencia de uso</Label>
+                <Label htmlFor="aiKnowledgeUsageFrequency">Frecuencia de uso</Label>
                 <Select
                   onValueChange={(value) =>
-                    handleInputChange("usageFrequency", value)
+                    handleInputChange("aiKnowledgeUsageFrequency", value)
                   }
                 >
                   <SelectTrigger>
@@ -1171,7 +1174,7 @@ const StandaloneSurvey = () => {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledge">Política de IA responsable</Label>
+                <Label htmlFor="aiPolicy">Política de IA responsable</Label>
                 <Select
                   onValueChange={(value) =>
                     handleInputChange("aiPolicy", value)
@@ -1204,10 +1207,10 @@ const StandaloneSurvey = () => {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledge">Gobierno de datos</Label>
+                <Label htmlFor="aiDataGovernance">Gobierno de datos</Label>
                 <Select
                   onValueChange={(value) =>
-                    handleInputChange("dataGovernance", value)
+                    handleInputChange("aiDataGovernance", value)
                   }
                 >
                   <SelectTrigger>
@@ -1240,10 +1243,10 @@ const StandaloneSurvey = () => {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledge">Seguridad & privacidad</Label>
+                <Label htmlFor="aiSecurityPrivacy">Seguridad & privacidad</Label>
                 <Select
                   onValueChange={(value) =>
-                    handleInputChange("securityPrivacy", value)
+                    handleInputChange("aiSecurityPrivacy", value)
                   }
                 >
                   <SelectTrigger>
