@@ -19,78 +19,110 @@ import { surveyService } from "@/services/surveyService";
 import { useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 
+interface TaskDetail {
+  frequency: string;
+  structureLevel: string;
+  impact: string;
+  dataAvailability: string;
+  automationPriority?: string;
+  timeSaved?: string;
+  implementationComplexity?: string;
+  kpiImpact?: string;
+  severityImpact?: string;
+}
+
+interface FormData {
+  companyName: string;
+  companySlug: string;
+  name: string;
+  email: string;
+  department: string;
+  role: string;
+  experience: string;
+  totalExperience: string;
+  mainTasks: string[];
+  applicationsUsed: string[];
+  otherToolText: string;
+  taskDetails: TaskDetail[];
+  aiKnowledge?: string;
+  toolsUsed: string[];
+  documentTasks: string[];
+  communicationTasks: string[];
+  analysisTasks: string[];
+  creativeTasks: string[];
+  taskPriority?: string;
+  automationBenefit?: string;
+  trainingTime: string;
+  trainingFormats: string[];
+  aiCuriosity?: string;
+  aiCaution?: string;
+  aiResistance?: string;
+  aiBasicKnowledge?: string;
+  aiKnowledgePromptDesign?: string;
+  aiKnowledgeIntegration?: string;
+  aiKnowledgeRiskAssessment?: string;
+  aiKnowledgeUsageFrequency?: string;
+  aiPolicy?: string;
+  aiDataGovernance?: string;
+  aiSecurityPrivacy?: string;
+  AI_learning_motivation?: string;
+  AI_learning_motivation_other?: string;
+  AI_learning_leader_support?: string;
+}
+
 const StandaloneSurvey = () => {
-  const { companyId, tkn } = useParams();
+  const { companyId, tkn } = useParams<{ companyId?: string; tkn?: string }>();
   const [currentStep, setCurrentStep] = useState(1);
   const [companyInfo, setCompanyInfo] = useState({ name: "", slug: "" });
-  const [formData, setFormData] = useState({
-    // Información de empresa (nueva)
+  const [formData, setFormData] = useState<FormData>({
     companyName: "",
     companySlug: "",
-
-    // Información personal
     name: "",
     email: "",
     department: "",
     role: "",
     experience: "",
     totalExperience: "",
-
-    // Inventario de tareas
     mainTasks: ["", "", "", "", ""],
     applicationsUsed: [],
-    otherToolText: "", // Nuevo campo para "Otra herramienta"
-
-    // Viabilidad de automatización para cada tarea
-    taskDetails: [
-      { frequency: "", structureLevel: "", impact: "", dataAvailability: "" },
-      { frequency: "", structureLevel: "", impact: "", dataAvailability: "" },
-      { frequency: "", structureLevel: "", impact: "", dataAvailability: "" },
-      { frequency: "", structureLevel: "", impact: "", dataAvailability: "" },
-      { frequency: "", structureLevel: "", impact: "", dataAvailability: "" },
-    ],
-
-
-    // Conocimiento en IA
-    aiKnowledge: "",
+    otherToolText: "",
+    taskDetails: Array(5).fill({
+      frequency: "",
+      structureLevel: "",
+      impact: "",
+      dataAvailability: "",
+    }),
     toolsUsed: [],
-
-    // Casos de uso específicos
     documentTasks: [],
     communicationTasks: [],
     analysisTasks: [],
     creativeTasks: [],
-
-    // Evaluación de impacto
     taskPriority: "",
     automationBenefit: "",
-    implementationComplexity: "",
-
-    // Roadmap de adopción
     trainingTime: "",
     trainingFormats: [],
   });
 
+  const [showOtherMotivation, setShowOtherMotivation] = useState(false);
+  const [otherMotivation, setOtherMotivation] = useState("");
+
   const totalSteps = 8;
   const progress = (currentStep / totalSteps) * 100;
 
-  // Capturar información de empresa desde la URL
   useEffect(() => {
     if (companyId && tkn) {
-      console.log("Company ID:", companyId);
-      console.log("Token:", tkn);
       const companyData = {
         name: decodeURIComponent(tkn),
         slug: decodeURIComponent(companyId),
       };
-      //setCompanyInfo(companyData);
+      setCompanyInfo(companyData);
       setFormData((prev) => ({
         ...prev,
         companyName: companyData.name,
         companySlug: companyData.slug,
       }));
     }
-  }, []);
+  }, [companyId, tkn]);
 
   const departments = [
     "Recursos Humanos",
@@ -105,7 +137,7 @@ const StandaloneSurvey = () => {
     "Otro",
   ];
 
-  const applicationsByCategory = {
+  const applicationsByCategory: Record<string, string[]> = {
     ERP: [
       "SAP S/4HANA",
       "Oracle E-Business Suite",
@@ -161,7 +193,7 @@ const StandaloneSurvey = () => {
       "BigQuery",
       "Snowflake",
     ],
-    "Otra herramienta": ["Otra"], // o puedes dejarlo como campo abierto
+    "Otra herramienta": ["Otra"],
   };
 
   const aiTools = [
@@ -237,13 +269,11 @@ const StandaloneSurvey = () => {
     "Hands-on labs / práctica",
   ];
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
-
-    console.log("formadata updated:",formData);
   };
 
   const handleTaskChange = (index: number, value: string) => {
@@ -255,37 +285,41 @@ const StandaloneSurvey = () => {
 
   const handleTaskDetailChange = (
     taskIndex: number,
-    field: string,
+    field: keyof TaskDetail,
     value: string
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      taskDetails: prev.taskDetails.map((task, i) =>
-        i === taskIndex ? { ...task, [field]: value } : task
-      ),
-    }));
+    setFormData((prev) => {
+      const newTaskDetails = [...prev.taskDetails];
+      newTaskDetails[taskIndex] = {
+        ...newTaskDetails[taskIndex],
+        [field]: value,
+      };
+      return {
+        ...prev,
+        taskDetails: newTaskDetails,
+      };
+    });
   };
 
   const handleCheckboxChange = (
-    field: string,
+    field: keyof FormData,
     value: string,
     checked: boolean
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: checked
-        ? [...(prev[field as keyof typeof prev] as string[]), value]
-        : (prev[field as keyof typeof prev] as string[]).filter(
-            (item) => item !== value
-          ),
-    }));
+    setFormData((prev) => {
+      const currentValues = prev[field] as string[];
+      return {
+        ...prev,
+        [field]: checked
+          ? [...currentValues, value]
+          : currentValues.filter((item) => item !== value),
+      };
+    });
   };
-
-  type FormDataType = typeof formData;
 
   const validateStepCompletion = (
     currentStep: number,
-    formData: FormDataType
+    formData: FormData
   ): { valid: boolean; missingFields: string[] } => {
     const missingFields: string[] = [];
 
@@ -296,39 +330,122 @@ const StandaloneSurvey = () => {
         if (!formData.department.trim()) missingFields.push("Departamento");
         if (!formData.role.trim()) missingFields.push("Puesto");
         if (!formData.experience.trim())
-          missingFields.push("Años de experiencia");
-
+          missingFields.push("Años de experiencia en el puesto");
         if (!formData.totalExperience.trim())
           missingFields.push("Años de experiencia profesional");
-
-        return {
-          valid: missingFields.length === 0,
-          missingFields,
-        };
+        break;
 
       case 2: // Inventario de Tareas
-        // Contar cuántas tareas tienen contenido (no están vacías después de trim)
         const filledTasksCount = formData.mainTasks.filter(
           (task) => task.trim() !== ""
         ).length;
-
-        if (filledTasksCount < 3) {
+        if (filledTasksCount < 3)
           missingFields.push("Se requieren al menos 3 tareas principales");
-        }
-        if (formData.applicationsUsed.length === 0) {
+        if (formData.applicationsUsed.length === 0)
           missingFields.push("Aplicaciones utilizadas");
-        }
-        return {
-          valid: missingFields.length === 0,
-          missingFields,
-        };
+        // Validar campo "Otra herramienta" si está seleccionado
+        if (
+          formData.applicationsUsed.includes("Otra") &&
+          !formData.otherToolText.trim()
+        )
+          missingFields.push("Especifica la otra herramienta");
+        break;
+
+      case 3: // Viabilidad de Automatización
+        formData.mainTasks.forEach((task, index) => {
+          if (task.trim() !== "") {
+            const taskDetail = formData.taskDetails[index];
+            if (!taskDetail.frequency)
+              missingFields.push(`Frecuencia para tarea ${index + 1}`);
+            if (!taskDetail.structureLevel)
+              missingFields.push(
+                `Nivel de estructuración para tarea ${index + 1}`
+              );
+            if (!taskDetail.impact)
+              missingFields.push(`Impacto para tarea ${index + 1}`);
+            if (!taskDetail.dataAvailability)
+              missingFields.push(
+                `Disponibilidad de datos para tarea ${index + 1}`
+              );
+            if (!taskDetail.kpiImpact)
+              missingFields.push(`KPI impactado para tarea ${index + 1}`);
+            if (!taskDetail.severityImpact)
+              missingFields.push(`Severidad para tarea ${index + 1}`);
+          }
+        });
+        break;
+
+      case 4: // Actitud cultural frente a la IA
+        if (!formData.aiCuriosity)
+          missingFields.push("Nivel de curiosidad sobre IA");
+        if (!formData.aiCaution)
+          missingFields.push("Nivel de cautela sobre IA");
+        if (!formData.aiResistance)
+          missingFields.push("Nivel de resistencia sobre IA");
+        break;
+
+      case 5: // Conocimiento en IA
+        if (!formData.aiBasicKnowledge)
+          missingFields.push("Conceptos básicos de IA");
+        if (!formData.aiKnowledgePromptDesign)
+          missingFields.push("Diseño de prompts");
+        if (!formData.aiKnowledgeIntegration)
+          missingFields.push("Integración en flujos");
+        if (!formData.aiKnowledgeRiskAssessment)
+          missingFields.push("Evaluación de riesgo");
+        if (!formData.aiKnowledgeUsageFrequency)
+          missingFields.push("Frecuencia de uso de IA");
+        break;
+
+      case 6: // Gobierno y ética de IA
+        if (!formData.aiPolicy)
+          missingFields.push("Política de IA responsable");
+        if (!formData.aiDataGovernance) missingFields.push("Gobierno de datos");
+        if (!formData.aiSecurityPrivacy)
+          missingFields.push("Seguridad y privacidad");
+        break;
+
+      case 7: // Evaluación de Impacto
+        formData.mainTasks.forEach((task, index) => {
+          if (task.trim() !== "") {
+            const taskDetail = formData.taskDetails[index];
+            if (!taskDetail.automationPriority)
+              missingFields.push(
+                `Prioridad de automatización para tarea ${index + 1}`
+              );
+            if (!taskDetail.timeSaved)
+              missingFields.push(`Tiempo ahorrado para tarea ${index + 1}`);
+            if (!taskDetail.implementationComplexity)
+              missingFields.push(
+                `Complejidad de implementación para tarea ${index + 1}`
+              );
+          }
+        });
+        break;
+
+      case 8: // Roadmap de Adopción
+        if (!formData.trainingTime) missingFields.push("Tiempo de formación");
+        if (formData.trainingFormats.length === 0)
+          missingFields.push("Formatos de entrenamiento");
+        if (!formData.AI_learning_motivation)
+          missingFields.push("Motivación para aprender IA");
+        if (
+          showOtherMotivation &&
+          !formData.AI_learning_motivation_other?.trim()
+        )
+          missingFields.push("Especificar motivación");
+        if (!formData.AI_learning_leader_support)
+          missingFields.push("Apoyo del líder");
+        break;
 
       default:
-        return {
-          valid: true,
-          missingFields: ["Paso no válido"],
-        };
+        break;
     }
+
+    return {
+      valid: missingFields.length === 0,
+      missingFields,
+    };
   };
 
   const nextStep = () => {
@@ -353,8 +470,35 @@ const StandaloneSurvey = () => {
     }
   };
 
+  const handleMotivationChange = (value: string) => {
+    handleInputChange("AI_learning_motivation", value);
+    setShowOtherMotivation(value === "5");
+    if (value !== "5") {
+      setOtherMotivation("");
+      handleInputChange("AI_learning_motivation_other", "");
+    }
+  };
+
+  const handleOtherMotivationChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setOtherMotivation(value);
+    handleInputChange("AI_learning_motivation_other", value);
+  };
+
   const submitSurvey = async () => {
-    // Crear timestamp para identificar la respuesta
+    const validation = validateStepCompletion(currentStep, formData);
+    if (!validation.valid) {
+      toast.error(
+        `Por favor completa los siguientes campos: ${validation.missingFields.join(
+          ", "
+        )}`,
+        { position: "top-right", autoClose: 5000 }
+      );
+      return;
+    }
+
     const timestamp = new Date().toISOString();
     const responseId = `${formData.companySlug || "general"}_${timestamp}`;
 
@@ -365,24 +509,14 @@ const StandaloneSurvey = () => {
       submittedAt: new Date().toLocaleString("es-MX"),
     };
 
-    // Enviar los datos del cuestionario al servicio
-
-    console.log(
-      "Creating survey with data:",
-      surveyResponse,
-      formData.companySlug
-    );
+    console.log("Enviando respuesta del cuestionario:", surveyResponse);
 
     try {
       await surveyService.createSurvey(surveyResponse, formData.companySlug);
-
       toast.success("¡Cuestionario enviado exitosamente! 🎉", {
         position: "top-right",
         autoClose: 5000,
       });
-
-      console.log("Survey data:", surveyResponse);
-
       setCurrentStep(0);
     } catch (error) {
       console.error("Error al enviar el cuestionario:", error);
@@ -390,32 +524,8 @@ const StandaloneSurvey = () => {
         "Ocurrió un error al enviar el cuestionario. Por favor, inténtalo de nuevo más tarde.",
         { position: "top-right", autoClose: 5000 }
       );
-      return;
     }
   };
-
-  //new fields
-  // Inside your component
-  const [showOtherMotivation, setShowOtherMotivation] = useState(false);
-  const [otherMotivation, setOtherMotivation] = useState("");
-
-  const handleMotivationChange = (value) => {
-    handleInputChange("AI_learning_motivation", value);
-    setShowOtherMotivation(value === "5");
-    if (value !== "5") {
-      setOtherMotivation("");
-      handleInputChange("AI_learning_motivation_other", "");
-    }
-  };
-
-  const handleOtherMotivationChange = (e) => {
-    const value = e.target.value;
-    setOtherMotivation(value);
-    handleInputChange("AI_learning_motivation_other", value);
-  };
-
-  
-
 
   const renderStep = () => {
     if (currentStep === 0) {
@@ -425,14 +535,14 @@ const StandaloneSurvey = () => {
           <h2 className="text-3xl font-bold text-green-600">
             ¡Gracias por completar el cuestionario!
           </h2>
-          {companyInfo.name && (
+          {/* {companyInfo.name && (
             <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-blue-800 font-medium">
                 📊 Respuesta registrada para:{" "}
                 <span className="font-bold">{companyInfo.name}</span>
               </p>
             </div>
-          )}
+          )} */}
           <p className="text-lg text-gray-600">
             Tus respuestas han sido registradas exitosamente. El equipo de
             directivos podrá revisar la información para desarrollar un plan de
@@ -448,17 +558,16 @@ const StandaloneSurvey = () => {
       );
     }
 
-    // Aquí iría toda la lógica del renderStep original, manteniendo el mismo código
     switch (currentStep) {
       case 1:
         return (
           <div className="space-y-6">
-            {companyInfo.name && (
+            {/* {companyInfo.name && (
               <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
                 <h3 className="font-semibold text-blue-800 mb-2">🏢 Empresa</h3>
                 <p className="text-blue-700">{companyInfo.name}</p>
               </div>
-            )}
+            )} */}
 
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold mb-4">Información Personal</h2>
@@ -492,6 +601,7 @@ const StandaloneSurvey = () => {
               <div className="space-y-2">
                 <Label htmlFor="department">Departamento</Label>
                 <Select
+                  value={formData.department}
                   onValueChange={(value) =>
                     handleInputChange("department", value)
                   }
@@ -525,6 +635,7 @@ const StandaloneSurvey = () => {
                 Años de experiencia en el puesto
               </Label>
               <Select
+                value={formData.experience}
                 onValueChange={(value) =>
                   handleInputChange("experience", value)
                 }
@@ -532,7 +643,6 @@ const StandaloneSurvey = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona tu experiencia" />
                 </SelectTrigger>
-
                 <SelectContent>
                   <SelectItem value="0-1">0-1 años</SelectItem>
                   <SelectItem value="2-3">2-3 años</SelectItem>
@@ -544,10 +654,11 @@ const StandaloneSurvey = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="experience">
+              <Label htmlFor="totalExperience">
                 Años de experiencia profesional
               </Label>
               <Select
+                value={formData.totalExperience}
                 onValueChange={(value) =>
                   handleInputChange("totalExperience", value)
                 }
@@ -555,7 +666,6 @@ const StandaloneSurvey = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona tu experiencia total" />
                 </SelectTrigger>
-
                 <SelectContent>
                   <SelectItem value="0-1">0-1 años</SelectItem>
                   <SelectItem value="2-3">2-3 años</SelectItem>
@@ -635,21 +745,20 @@ const StandaloneSurvey = () => {
                               >
                                 {app}
                               </Label>
-
-                              {/* Mostrar input junto a "Otra" */}
                               {app === "Otra" &&
                                 formData.applicationsUsed.includes("Otra") && (
-                             
-
                                   <Input
-                                  className="w-64 mb-2"
-                                  id="other-tool"
-                                  value={formData.otherToolText}
-                                  onChange={(e) => 
-                                    handleInputChange("otherToolText", e.target.value)
-                                  }
-                                  placeholder="Especifica otra herramienta"
-                                />
+                                    className="w-64 mb-2"
+                                    id="other-tool"
+                                    value={formData.otherToolText}
+                                    onChange={(e) =>
+                                      handleInputChange(
+                                        "otherToolText",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Especifica otra herramienta"
+                                  />
                                 )}
                             </div>
                           ))}
@@ -692,6 +801,7 @@ const StandaloneSurvey = () => {
                         <div className="space-y-2">
                           <Label>Frecuencia</Label>
                           <Select
+                            value={formData.taskDetails[index]?.frequency || ""}
                             onValueChange={(value) =>
                               handleTaskDetailChange(index, "frequency", value)
                             }
@@ -700,7 +810,7 @@ const StandaloneSurvey = () => {
                               <SelectValue placeholder="Selecciona frecuencia" />
                             </SelectTrigger>
                             <SelectContent>
-                            <SelectItem value="1">
+                              <SelectItem value="1">
                                 Ad-hoc (≤1 vez/mes)
                               </SelectItem>
                               <SelectItem value="2">Trimestral</SelectItem>
@@ -714,6 +824,9 @@ const StandaloneSurvey = () => {
                         <div className="space-y-2">
                           <Label>Nivel de estructuración</Label>
                           <Select
+                            value={
+                              formData.taskDetails[index]?.structureLevel || ""
+                            }
                             onValueChange={(value) =>
                               handleTaskDetailChange(
                                 index,
@@ -748,6 +861,7 @@ const StandaloneSurvey = () => {
                         <div className="space-y-2">
                           <Label>Impacto en resultados</Label>
                           <Select
+                            value={formData.taskDetails[index]?.impact || ""}
                             onValueChange={(value) =>
                               handleTaskDetailChange(index, "impact", value)
                             }
@@ -778,6 +892,10 @@ const StandaloneSurvey = () => {
                         <div className="space-y-2">
                           <Label>Disponibilidad de datos</Label>
                           <Select
+                            value={
+                              formData.taskDetails[index]?.dataAvailability ||
+                              ""
+                            }
                             onValueChange={(value) =>
                               handleTaskDetailChange(
                                 index,
@@ -810,6 +928,7 @@ const StandaloneSurvey = () => {
                         <div className="space-y-2">
                           <Label>KPI impactado (marca uno)</Label>
                           <Select
+                            value={formData.taskDetails[index]?.kpiImpact || ""}
                             onValueChange={(value) =>
                               handleTaskDetailChange(index, "kpiImpact", value)
                             }
@@ -817,7 +936,6 @@ const StandaloneSurvey = () => {
                             <SelectTrigger>
                               <SelectValue placeholder="Nivel de impacto" />
                             </SelectTrigger>
-
                             <SelectContent>
                               <SelectItem value="1">
                                 Incrementar ventas / ingresos
@@ -841,6 +959,9 @@ const StandaloneSurvey = () => {
                         <div className="space-y-2">
                           <Label>Severidad si la tarea falla</Label>
                           <Select
+                            value={
+                              formData.taskDetails[index]?.severityImpact || ""
+                            }
                             onValueChange={(value) =>
                               handleTaskDetailChange(
                                 index,
@@ -890,9 +1011,10 @@ const StandaloneSurvey = () => {
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="aiCuriosity">
-                  Curiosidad: “Me entusiasma experimentar con IA”
+                  Curiosidad: "Me entusiasma experimentar con IA"
                 </Label>
                 <Select
+                  value={formData.aiCuriosity || ""}
                   onValueChange={(value) =>
                     handleInputChange("aiCuriosity", value)
                   }
@@ -923,13 +1045,12 @@ const StandaloneSurvey = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="aiCaution">
-                  Cautela: “Prefiero esperar a que otros validen la IA”
+                  Cautela: "Prefiero esperar a que otros validen la IA"
                 </Label>
                 <Select
+                  value={formData.aiCaution || ""}
                   onValueChange={(value) =>
                     handleInputChange("aiCaution", value)
                   }
@@ -959,13 +1080,12 @@ const StandaloneSurvey = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="aiResistance">
-                  Resistencia: “La IA amenaza mi rol”
+                  Resistencia: "La IA amenaza mi rol"
                 </Label>
                 <Select
+                  value={formData.aiResistance || ""}
                   onValueChange={(value) =>
                     handleInputChange("aiResistance", value)
                   }
@@ -1008,9 +1128,9 @@ const StandaloneSurvey = () => {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiBasicKnowledge
-                ">Conceptos básicos</Label>
+                <Label htmlFor="aiBasicKnowledge">Conceptos básicos</Label>
                 <Select
+                  value={formData.aiBasicKnowledge || ""}
                   onValueChange={(value) =>
                     handleInputChange("aiBasicKnowledge", value)
                   }
@@ -1023,9 +1143,8 @@ const StandaloneSurvey = () => {
                       No conozco términos de IA.
                     </SelectItem>
                     <SelectItem value="2">
-                      Sé que existen “modelos” pero no cómo funcionan.
+                      Sé que existen "modelos" pero no cómo funcionan.
                     </SelectItem>
-
                     <SelectItem value="3">
                       Puedo explicar IA vs. ML y citar ejemplos.
                     </SelectItem>
@@ -1038,12 +1157,12 @@ const StandaloneSurvey = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledgePromptDesign">Diseño de prompts</Label>
+                <Label htmlFor="aiKnowledgePromptDesign">
+                  Diseño de prompts
+                </Label>
                 <Select
+                  value={formData.aiKnowledgePromptDesign || ""}
                   onValueChange={(value) =>
                     handleInputChange("aiKnowledgePromptDesign", value)
                   }
@@ -1071,12 +1190,12 @@ const StandaloneSurvey = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledgeIntegration">Integración en flujos</Label>
+                <Label htmlFor="aiKnowledgeIntegration">
+                  Integración en flujos
+                </Label>
                 <Select
+                  value={formData.aiKnowledgeIntegration || ""}
                   onValueChange={(value) =>
                     handleInputChange("aiKnowledgeIntegration", value)
                   }
@@ -1101,12 +1220,12 @@ const StandaloneSurvey = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledgeRiskAssessment">Evaluación de riesgo</Label>
+                <Label htmlFor="aiKnowledgeRiskAssessment">
+                  Evaluación de riesgo
+                </Label>
                 <Select
+                  value={formData.aiKnowledgeRiskAssessment || ""}
                   onValueChange={(value) =>
                     handleInputChange("aiKnowledgeRiskAssessment", value)
                   }
@@ -1133,12 +1252,12 @@ const StandaloneSurvey = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiKnowledgeUsageFrequency">Frecuencia de uso</Label>
+                <Label htmlFor="aiKnowledgeUsageFrequency">
+                  Frecuencia de uso
+                </Label>
                 <Select
+                  value={formData.aiKnowledgeUsageFrequency || ""}
                   onValueChange={(value) =>
                     handleInputChange("aiKnowledgeUsageFrequency", value)
                   }
@@ -1176,6 +1295,7 @@ const StandaloneSurvey = () => {
               <div className="space-y-2">
                 <Label htmlFor="aiPolicy">Política de IA responsable</Label>
                 <Select
+                  value={formData.aiPolicy || ""}
                   onValueChange={(value) =>
                     handleInputChange("aiPolicy", value)
                   }
@@ -1203,12 +1323,10 @@ const StandaloneSurvey = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="aiDataGovernance">Gobierno de datos</Label>
                 <Select
+                  value={formData.aiDataGovernance || ""}
                   onValueChange={(value) =>
                     handleInputChange("aiDataGovernance", value)
                   }
@@ -1222,7 +1340,7 @@ const StandaloneSurvey = () => {
                     </SelectItem>
                     <SelectItem value="2">
                       Algunas personas cuidan datos, pero sin roles claros ni
-                      revisiones.{" "}
+                      revisiones.
                     </SelectItem>
                     <SelectItem value="3">
                       Se nombraron responsables y se limpian los datos cuando
@@ -1239,12 +1357,12 @@ const StandaloneSurvey = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="aiSecurityPrivacy">Seguridad & privacidad</Label>
+                <Label htmlFor="aiSecurityPrivacy">
+                  Seguridad & privacidad
+                </Label>
                 <Select
+                  value={formData.aiSecurityPrivacy || ""}
                   onValueChange={(value) =>
                     handleInputChange("aiSecurityPrivacy", value)
                   }
@@ -1259,7 +1377,7 @@ const StandaloneSurvey = () => {
                     </SelectItem>
                     <SelectItem value="2">
                       Contraseñas básicas; a veces marcamos documentos como
-                      “confidencial”.
+                      "confidencial".
                     </SelectItem>
                     <SelectItem value="3">
                       Controles básicos de TI (antivirus, contraseñas); sin
@@ -1303,6 +1421,10 @@ const StandaloneSurvey = () => {
                       <div className="space-y-2">
                         <Label>Prioridad de automatización</Label>
                         <Select
+                          value={
+                            formData.taskDetails[index]?.automationPriority ||
+                            ""
+                          }
                           onValueChange={(value) =>
                             handleTaskDetailChange(
                               index,
@@ -1316,19 +1438,24 @@ const StandaloneSurvey = () => {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="1">
-                            Puede esperar. Si no se hace, nada grave ocurre en los próximos 2 años.
+                              Puede esperar. Si no se hace, nada grave ocurre en
+                              los próximos 2 años.
                             </SelectItem>
                             <SelectItem value="2">
-                            Sería útil: Aporta valor, pero podemos dejarlo para dentro de 1 a 1½ años.
+                              Sería útil: Aporta valor, pero podemos dejarlo
+                              para dentro de 1 a 1½ años.
                             </SelectItem>
                             <SelectItem value="3">
-                            Necesario: Conviene resolverlo antes de que acabe el año.
+                              Necesario: Conviene resolverlo antes de que acabe
+                              el año.
                             </SelectItem>
                             <SelectItem value="4">
-                            Urgente: Retrasar más de 3-6 meses nos costará dinero o clientes.
+                              Urgente: Retrasar más de 3-6 meses nos costará
+                              dinero o clientes.
                             </SelectItem>
                             <SelectItem value="5">
-                            Crítico: Debemos atenderlo de inmediato; afecta operación o cumplimiento.
+                              Crítico: Debemos atenderlo de inmediato; afecta
+                              operación o cumplimiento.
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -1337,6 +1464,7 @@ const StandaloneSurvey = () => {
                       <div className="space-y-2">
                         <Label>Tiempo que podrías ahorrar</Label>
                         <Select
+                          value={formData.taskDetails[index]?.timeSaved || ""}
                           onValueChange={(value) =>
                             handleTaskDetailChange(index, "timeSaved", value)
                           }
@@ -1344,7 +1472,6 @@ const StandaloneSurvey = () => {
                           <SelectTrigger>
                             <SelectValue placeholder="Estima el tiempo ahorrado" />
                           </SelectTrigger>
-
                           <SelectContent>
                             <SelectItem value="<1">
                               &lt; 1 h por semana
@@ -1368,6 +1495,10 @@ const StandaloneSurvey = () => {
                       <div className="space-y-2">
                         <Label>Complejidad de implementación</Label>
                         <Select
+                          value={
+                            formData.taskDetails[index]
+                              ?.implementationComplexity || ""
+                          }
                           onValueChange={(value) =>
                             handleTaskDetailChange(
                               index,
@@ -1379,11 +1510,10 @@ const StandaloneSurvey = () => {
                           <SelectTrigger>
                             <SelectValue placeholder="Evalúa la complejidad" />
                           </SelectTrigger>
-
                           <SelectContent>
                             <SelectItem value="1">
-                              Muy fácil: Se resuelve con un click o activando una
-                              opción.
+                              Muy fácil: Se resuelve con un click o activando
+                              una opción.
                             </SelectItem>
                             <SelectItem value="2">
                               Fácil: Requiere una simple configuración, sin
@@ -1415,9 +1545,15 @@ const StandaloneSurvey = () => {
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-4">Roadmap de Adopción (Disponibilidad y Apoyo para tu Capacitación en IA)</h2>
+              <h2 className="text-2xl font-bold mb-4">
+                Roadmap de Adopción (Disponibilidad y Apoyo para tu Capacitación
+                en IA)
+              </h2>
               <p className="text-gray-600">
-              Cuéntanos cuántas horas puedes dedicar cada semana, qué te impulsa a aprender y qué respaldo recibes de tu líder. Con estos datos crearemos un plan de formación realista y alineado a tus necesidades.
+                Cuéntanos cuántas horas puedes dedicar cada semana, qué te
+                impulsa a aprender y qué respaldo recibes de tu líder. Con estos
+                datos crearemos un plan de formación realista y alineado a tus
+                necesidades.
               </p>
             </div>
 
@@ -1427,6 +1563,7 @@ const StandaloneSurvey = () => {
                   ¿Cuánto tiempo semanal podrías dedicar a formación en IA?
                 </Label>
                 <Select
+                  value={formData.trainingTime}
                   onValueChange={(value) =>
                     handleInputChange("trainingTime", value)
                   }
@@ -1477,9 +1614,12 @@ const StandaloneSurvey = () => {
                 <Label htmlFor="trainingTime">
                   Motivación principal para aprender IA
                 </Label>
-                <Select onValueChange={handleMotivationChange}>
+                <Select
+                  value={formData.AI_learning_motivation || ""}
+                  onValueChange={handleMotivationChange}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona el tiempo disponible" />
+                    <SelectValue placeholder="Selecciona tu motivación" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1">Desarrollo profesional</SelectItem>
@@ -1497,12 +1637,11 @@ const StandaloneSurvey = () => {
                     <Label htmlFor="otherMotivation">
                       Especifica tu motivación
                     </Label>
-                    <input
+                    <Input
                       type="text"
                       id="otherMotivation"
                       value={otherMotivation}
                       onChange={handleOtherMotivationChange}
-                      className="w-full p-2 border rounded"
                       placeholder="Por favor, especifica tu motivación"
                     />
                   </div>
@@ -1513,8 +1652,8 @@ const StandaloneSurvey = () => {
                 <Label htmlFor="trainingTime">
                   Apoyo de tu líder para dedicar tiempo a IA
                 </Label>
-
                 <Select
+                  value={formData.AI_learning_leader_support || ""}
                   onValueChange={(value) =>
                     handleInputChange("AI_learning_leader_support", value)
                   }
@@ -1585,22 +1724,7 @@ const StandaloneSurvey = () => {
 
               {currentStep === totalSteps ? (
                 <Button
-                  onClick={() => {
-                    const validation = validateStepCompletion(
-                      currentStep,
-                      formData
-                    );
-                    if (validation.valid) {
-                      submitSurvey();
-                    } else {
-                      toast.error(
-                        `Por favor completa los siguientes campos: ${validation.missingFields.join(
-                          ", "
-                        )}`,
-                        { position: "top-right", autoClose: 5000 }
-                      );
-                    }
-                  }}
+                  onClick={submitSurvey}
                   className="bg-green-600 hover:bg-green-700"
                 >
                   Completar Cuestionario

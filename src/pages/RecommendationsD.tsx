@@ -446,7 +446,8 @@ const RecommendationsD = () => {
     //validate if roadmapData.roadmap_phases is empty
     if (
       roadmapData.roadmap_phases.length === 0 ||
-      !roadmapData.roadmap_phases
+      !roadmapData.roadmap_phases ||
+      !roadmapData.roadmap_phases.length
     ) {
       toast.error(
         "No se ha generado un RoadMap AI. Por favor, genera primero el RoadMap."
@@ -487,7 +488,7 @@ const RecommendationsD = () => {
     }
 
     //validate if roadmapData.training is empty
-    if (roadmapData.training.length === 0 || !roadmapData.training) {
+    if (roadmapData.training.length === 0 || !roadmapData.training || !roadmapData.training.length) {
       toast.error(
         "No se ha generado un entrenamiento AI. Por favor, genera primero el entrenamiento."
       );
@@ -731,7 +732,9 @@ const RecommendationsD = () => {
               </div>
             )}
 
-            {!loadingTraining && (
+            {!loadingTraining && 
+              roadmapData?.training?.length > 0 &&
+            (
               <div className="grid gap-6">
                 {roadmapData.training.map((program, index) => (
                   <Card key={index} className="border-l-4 border-l-blue-500">
@@ -884,7 +887,7 @@ const RecommendationsD = () => {
               </div>
             )}
 
-            {!loadingTechStack && (
+            {!loadingTechStack &&  roadmapData?.techStack?.length > 0 && (
               <div className="grid gap-6">
                 {roadmapData.techStack.map((category) => (
                   <Card
